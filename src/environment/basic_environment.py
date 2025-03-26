@@ -15,7 +15,11 @@ class PBO_Env:
         self.optimizer = optimizer
 
     def reset(self):
-        self.problem.reset()
+        if isinstance(self.problem, list):
+            for _ in range(len(self.problem)):
+                self.problem[_].reset()
+        else:
+            self.problem.reset()
         return self.optimizer.init_population(self.problem)
 
     def step(self, action: Any):

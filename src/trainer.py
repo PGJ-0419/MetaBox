@@ -10,6 +10,8 @@ import numpy as np
 import os
 import matplotlib
 import matplotlib.pyplot as plt
+from agent.L2O_agent import L2O_Agent
+from agent.L2O_agent_parallel import L2O_Agent_Parallel
 from agent import (
     DE_DDQN_Agent,
     DEDQN_Agent,
@@ -21,10 +23,11 @@ from agent import (
     L2L_Agent,
     GLEET_Agent,
     RL_DAS_Agent,
-    LES_Agent,
+    #LES_Agent,
     NRLPSO_Agent,
     Symbol_Agent,
 )
+from optimizer.MTO.L2O_optimizer import L2O_Optimizer
 from optimizer import (
     DE_DDQN_Optimizer,
     DEDQN_Optimizer,
@@ -157,14 +160,15 @@ class Trainer(object):
             self.train_set.shuffle()
             with tqdm(range(self.train_set.N), desc=f'Training {self.agent.__class__.__name__} Epoch {epoch}') as pbar:
                 for problem_id, problem in enumerate(self.train_set):
-                    env = PBO_Env(problem, self.optimizer)
+                    #env = PBO_Env(problem, self.optimizer)
+                    env = [PBO_Env(problem, self.optimizer) for _ in range(2)]
                     exceed_max_ls, pbar_info_train = self.agent.train_episode(env)  # pbar_info -> dict
                     pbar.set_postfix(pbar_info_train)
                     pbar.update(1)
                     name = problem.__str__()
                     learn_step = pbar_info_train['learn_steps']
-                    cost_record[name].append(pbar_info_train['gbest'])
-                    normalizer_record[name].append(pbar_info_train['normalizer'])
+                    #cost_record[name].append(pbar_info_train['gbest'])
+                    #normalizer_record[name].append(pbar_info_train['normalizer'])
                     return_record.append(pbar_info_train['return'])
                     learn_steps.append(learn_step)
                     if exceed_max_ls:

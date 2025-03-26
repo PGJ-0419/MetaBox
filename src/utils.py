@@ -28,6 +28,7 @@ def construct_problem_set(config):
         return Augmented_WCCI2020_Dataset.get_datasets(dim=config.dim,
                                                        train_batch_size=config.train_batch_size,
                                                        test_batch_size=config.test_batch_size,
-                                                       difficulty=config.difficulty)
+                                                       difficulty=config.difficulty,
+                                                       task_cnt=config.task_cnt)
     else:
         raise ValueError(problem + ' is not defined!')

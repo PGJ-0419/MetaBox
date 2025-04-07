@@ -10,7 +10,8 @@ Your own backbone optimizer should inherit from this class and have the followin
        if needed. It's expected to return a tuple of [next_state, reward, is_done] for agent to learn.
 """
 from typing import Any, Tuple
-
+import numpy as np
+import torch
 class Learnable_Optimizer:
     """
     Abstract super class for learnable backbone optimizers.
@@ -26,3 +27,10 @@ class Learnable_Optimizer:
                action: Any,
                tasks:Any) -> Tuple[Any]:
         raise NotImplementedError
+
+    def seed(self, seed = None):
+        self.rng = np.random
+        if seed is not None:
+            np.random.seed(seed)
+            torch.manual_seed(seed)
+            self.rng = np.random.RandomState(seed)

@@ -154,6 +154,7 @@ class L2O_Agent_Parallel(Basic_Agent):
 
     def train_episode(self, 
                       envs, 
+                      seeds: Optional[Union[int, List[int], np.ndarray]],
                       para_mode: Literal['dummy', 'subproc', 'ray', 'ray-subproc']='dummy',
                       asynchronous: Literal[None, 'idle', 'restart', 'continue']=None,
                       num_cpus: Optional[Union[int, None]]=1,
@@ -162,7 +163,7 @@ class L2O_Agent_Parallel(Basic_Agent):
         if self.device != 'cpu':
             num_gpus = max(num_gpus, 1)
         env = ParallelEnv(envs, para_mode, asynchronous, num_cpus, num_gpus)
-        
+        env.seed(seeds)
         memory = Memory()
 
         # params for training
@@ -182,6 +183,7 @@ class L2O_Agent_Parallel(Basic_Agent):
         t = 0
         # initial_cost = obj
         _R = torch.zeros(len(env))
+        _loss = []
         # sample trajectory
         while not env.all_done():
             t_s = t
@@ -306,6 +308,7 @@ class L2O_Agent_Parallel(Basic_Agent):
                 self.optimizer.zero_grad()
                 loss.backward()
 
+                _loss.append(loss.item())
                 # Clip gradient norm and get (clipped) gradient norms for logging
                 # current_step = int(pre_step + t//n_step * K_epochs  + _k)
                 grad_norms = clip_grad_norms(self.optimizer.param_groups, self.max_grad_norm)
@@ -319,18 +322,34 @@ class L2O_Agent_Parallel(Basic_Agent):
 
                 if self.learning_time >= self.config.max_learning_step:
                     memory.clear_memory()
-                    return_info = {'return': _R, 'learn_steps': self.learning_time, }
-                    for key in required_info.keys():
-                        return_info[key] = env.get_env_attr(required_info[key])
+                    return_info = {'return': _R, 'learn_steps': self.learning_time, 'loss':np.mean(_loss)}
+                    # for key in required_info.keys():
+                    #     return_info[key] = env.get_env_attr(required_info[key])
+                    
+                    gbest_list = []
+                    optimizer_list = env.get_env_attr('optimizer')
+                    for _ in range(len(optimizer_list)):
+                        gbest_list.append(optimizer_list[_].gbest)
+                    
+                    return_info['gbest'] = gbest_list
+
                     env.close()
                     return self.learning_time >= self.config.max_learning_step, return_info
 
             memory.clear_memory()
         
         is_train_ended = self.learning_time >= self.config.max_learning_step
-        return_info = {'return': _R, 'learn_steps': self.learning_time, }
-        for key in required_info.keys():
-            return_info[key] = env.get_env_attr(required_info[key])
+        return_info = {'return': _R, 'learn_steps': self.learning_time, 'loss':np.mean(_loss)}
+        # for key in required_info.keys():
+        #     return_info[key] = env.get_env_attr(required_info[key])
+
+        gbest_list = []
+        optimizer_list = env.get_env_attr('optimizer')
+        for _ in range(len(optimizer_list)):
+            gbest_list.append(optimizer_list[_].gbest)
+                    
+        return_info['gbest'] = gbest_list
+     
         env.close()
         
         return is_train_ended, return_info

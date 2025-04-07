@@ -24,3 +24,6 @@ class PBO_Env:
 
     def step(self, action: Any):
         return self.optimizer.update(action, self.problem)
+    
+    def seed(self, seed):
+        self.optimizer.seed(seed)

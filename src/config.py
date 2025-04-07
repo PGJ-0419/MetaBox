@@ -73,6 +73,21 @@ def get_config(args=None):
     parser.add_argument('--pre_train_rollout', type=str, help='path of pre-train models rollout result .pkl file')
     parser.add_argument('--scratch_rollout', type=str, help='path of scratch models rollout result .pkl file')
 
+
+    # todo add new config
+    parser.add_argument('--max_epoch', type = int, default = 100)
+    parser.add_argument('--seed', type = int, default = 3849)
+    parser.add_argument('--epoch_seed', type = int, default = 100)
+    parser.add_argument('--id_seed', type = int, default = 5)
+    parser.add_argument('--train_mode', type = str, default='single', choices = ['single', 'multi'])
+    parser.add_argument('--end_mode', type = str,default='step', choices = ['step', 'epoch'])
+
+    parser.add_argument('--test_run', type = int, default = 51)
+
+    parser.add_argument('--no_tb', type = bool, default = False, help = 'disable tensorboard logging')
+    parser.add_argument('--log_step', type = int, default = 50, help = 'log every log_step steps')
+
+
     config = parser.parse_args(args)
     config.maxFEs = 2000 * config.dim
     # for bo, maxFEs is relatively smaller due to time limit

@@ -15,6 +15,7 @@ params = {
 }
 plt.rcParams.update(params)
 
+
 markers = ['o', '^', '*', 'O', 'v', 'x', 'X', 'd', 'D', '.', '1', '2', '3', '4', '8', 's', 'p', 'P', 'h', 'H']
 colors = ['b', 'g', 'orange', 'r', 'purple', 'brown', 'grey', 'limegreen', 'turquoise', 'olivedrab', 'royalblue', 'darkviolet', 
           'chocolate', 'crimson', 'teal','seagreen', 'navy', 'deeppink', 'maroon', 'goldnrod', 
@@ -261,6 +262,50 @@ class Logger:
         self.config = config
         self.color_arrangement = {}
         self.arrange_index = 0
+
+    def draw_mto_train_return(self, data: list, output_dir: str) -> None: 
+        log_dir = self.config.log_dir + f'/train'
+        if not os.path.exists(log_dir + 'pic/'):
+            os.makedirs(log_dir + 'pic/')
+        plt.figure()
+        return_data = np.array(data,dtype=np.float32) #[epochs, env_cnt]
+        x = np.arange(return_data.shape[0])
+        y = np.mean(return_data, axis=-1)
+        plt.plot(x, y, 
+         color='blue',       
+         marker='o',         
+         linestyle='-',     
+         linewidth=2,        
+         markersize=8)       
+        plt.xlabel('Learning Steps')
+        plt.ylabel('Avg Return')
+        plt.grid()
+        #plt.savefig(output_dir + f'avg_return_curve.png', bbox_inches='tight')
+        plt.savefig(log_dir+f'pic/mto_return.png')
+        plt.close()
+
+    def draw_mto_train_cost(self, data:list, output_dir: str) -> None:
+        log_dir = self.config.log_dir + f'/train'
+        if not os.path.exists(log_dir + 'pic/'):
+            os.makedirs(log_dir + 'pic/')
+        plt.figure()
+        cost_data = np.array(data,dtype=np.float32) #[epochs, env_cnt, task_cnt]
+        x = np.arange(cost_data.shape[0])
+        y = np.mean(np.mean(cost_data, axis=-1), axis=-1)
+        print(x)
+        print(y)
+        plt.plot(x, y, 
+         color='blue',       
+         marker='o',         
+         linestyle='-',     
+         linewidth=2,        
+         markersize=8)       
+        plt.xlabel('Learning Steps')
+        plt.ylabel('Avg Cost')
+        plt.grid()
+        #plt.savefig(output_dir + f'avg_return_curve.png', bbox_inches='tight')
+        plt.savefig(log_dir+f'pic/mto_cost.png')
+        plt.close()
 
     def draw_test_cost(self, data: dict, output_dir: str, Name: Optional[Union[str, list]]=None, logged: bool=False, categorized: bool=False) -> None:
         for problem in list(data.keys()):

@@ -4,16 +4,6 @@ from collections import deque
 from optimizer.learnable_optimizer import Learnable_Optimizer
 
 
-def generate_random_int(NP: int, cols: int) -> torch.Tensor:
-	r = torch.randint(0, NP, (NP, cols), dtype=torch.long)  # [NP, 3]
-
-	for i in range(NP):
-		while r[i, :].eq(i).any():
-			r[i, :] = torch.randint(0, NP, (cols,), dtype=torch.long)
-
-	return r
-
-
 class Surr_RLDE_Optimizer(Learnable_Optimizer):
 	def __init__(self, config):
 		super().__init__(config)
@@ -99,7 +89,12 @@ class Surr_RLDE_Optimizer(Learnable_Optimizer):
 		return state
 
 	def init_population(self, problem):
-		self.population = torch.rand(self.pop_size, self.dim) * (problem.ub - problem.lb) + problem.lb
+		self.rng_torch = self.rng_cpu
+		if self.device.type == "cuda":
+			self.rng_torch = self.rng_gpu
+
+		self.population = (torch.rand(self.pop_size, self.dim, generator = self.rng_torch, device = self.device)
+						   * (problem.ub - problem.lb) + problem.lb)
 		#(-5,5)
 		self.population = self.population.to(self.device)
 		if problem.optimum is None:
@@ -234,7 +229,7 @@ class Surr_RLDE_Optimizer(Learnable_Optimizer):
 
 		if mut_way == 'DE/rand/1':
 
-			r = generate_random_int(self.pop_size, 3)  # Shape: [pop_size, 3]
+			r = self.generate_random_int(self.pop_size, 3)  # Shape: [pop_size, 3]
 			a = self.population[r[:, 0]]
 			b = self.population[r[:, 1]]
 			c = self.population[r[:, 2]]
@@ -245,7 +240,7 @@ class Surr_RLDE_Optimizer(Learnable_Optimizer):
 			mut_population = v
 
 		elif mut_way == 'DE/best/1':
-			r = generate_random_int(self.pop_size, 2)  # Shape: [pop_size, 2]
+			r = self.generate_random_int(self.pop_size, 2)  # Shape: [pop_size, 2]
 			a = self.population[r[:, 0]]
 			b = self.population[r[:, 1]]
 			v = self.pop_cur_best + self.F * (a - b)
@@ -253,7 +248,7 @@ class Surr_RLDE_Optimizer(Learnable_Optimizer):
 			mut_population = v
 
 		elif mut_way == 'DE/current-to-rand':
-			r = generate_random_int(self.pop_size, 3)  # Shape: [pop_size, 3]
+			r = self.generate_random_int(self.pop_size, 3)  # Shape: [pop_size, 3]
 			a = self.population[r[:, 0]]
 			b = self.population[r[:, 1]]
 			c = self.population[r[:, 2]]
@@ -266,12 +261,12 @@ class Surr_RLDE_Optimizer(Learnable_Optimizer):
 			p_num = max(1, int(p * self.pop_size))
 			sorted_indices = torch.argsort(self.fitness.clone().flatten())
 			pbest_indices = sorted_indices[:p_num]
-			r = generate_random_int(self.pop_size, 2)  # Shape: [pop_size, 2]
+			r = self.generate_random_int(self.pop_size, 2)  # Shape: [pop_size, 2]
 
 			a = self.population[r[:, 0]]
 			b = self.population[r[:, 1]]
 
-			pbest_index = pbest_indices[torch.randint(0, p_num, (self.pop_size,))]
+			pbest_index = pbest_indices[torch.randint(0, p_num, (self.pop_size,), generator = self.rng_torch, device = self.device)]
 			pbest = self.population[pbest_index]
 
 			v = self.population + self.F * (pbest - self.population) + self.F * (a - b)
@@ -279,7 +274,7 @@ class Surr_RLDE_Optimizer(Learnable_Optimizer):
 			mut_population = v
 
 		elif mut_way == 'DE/current-to-best':
-			r = generate_random_int(self.pop_size, 4)  # Shape: [pop_size, 4]
+			r = self.generate_random_int(self.pop_size, 4)  # Shape: [pop_size, 4]
 			a = self.population[r[:, 0]]
 			b = self.population[r[:, 1]]
 			c = self.population[r[:, 2]]
@@ -298,8 +293,17 @@ class Surr_RLDE_Optimizer(Learnable_Optimizer):
 		crossover_population = self.population.clone()
 		for i in range(self.pop_size):
 
-			select_dim = torch.randint(0, self.dim, (1,))
+			select_dim = torch.randint(0, self.dim, (1,), generator = self.rng_torch, device = self.device)
 			for j in range(self.dim):
-				if torch.rand(1) < self.Cr or j == select_dim:
+				if torch.rand(1, generator = self.rng_torch, device = self.device) < self.Cr or j == select_dim:
 					crossover_population[i][j] = mut_population[i][j]
 		return crossover_population
+
+	def generate_random_int(self, NP: int, cols: int) -> torch.Tensor:
+		r = torch.randint(0, NP, (NP, cols), dtype = torch.long, generator = self.rng_torch, device = self.device)  # [NP, 3]
+
+		for i in range(NP):
+			while r[i, :].eq(i).any():
+				r[i, :] = torch.randint(0, NP, (cols,), dtype = torch.long, generator = self.rng_torch, device = self.device)
+
+		return r

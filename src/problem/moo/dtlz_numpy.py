@@ -1,12 +1,11 @@
-
-from problem.moo.basic_problem import Basic_Problem
+from problem.MOO.moo_basic import MOO_Basic_Problem
 import numpy as np
 import geatpy as ea
 # from pymoo.core.problem import Problem
 # from pymoo.util.reference_direction import UniformReferenceDirectionFactory
 # from pymoo.util.remote import Remote
 
-class DTLZ(Basic_Problem):
+class DTLZ(MOO_Basic_Problem):
     def __init__(self, n_var, n_obj, k=None, **kwargs):
 
         if n_var:

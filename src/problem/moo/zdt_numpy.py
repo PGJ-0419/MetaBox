@@ -1,13 +1,13 @@
 
 import numpy as np
-from problem.moo.basic_problem import Basic_Problem
+from problem.MOO.moo_basic import MOO_Basic_Problem
 import geatpy as ea
 # import pymoo.gradient.toolbox as anp
 # from pymoo.core.problem import Problem
 # from pymoo.util.normalization import normalize
 
 
-class ZDT(Basic_Problem):
+class ZDT(MOO_Basic_Problem):
 
     def __init__(self, n_var=30, **kwargs):
         super().__init__(n_var=n_var, n_obj=2, lb=0, ub=1, vtype=float, **kwargs)

@@ -1,4 +1,4 @@
-from ..basic_problem import Basic_Problem
+from problem.basic_problem import Basic_Problem
 import numpy as np
 import math
 MINMAX = -1 

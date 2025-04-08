@@ -13,7 +13,7 @@ from typing import Any, Tuple
 from problem.basic_problem import Basic_Problem
 import numpy as np
 import torch
-
+import time
 
 class Learnable_Optimizer:
     """
@@ -32,8 +32,14 @@ class Learnable_Optimizer:
         raise NotImplementedError
 
     def seed(self, seed = None):
-        self.rng = np.random
-        if seed is not None:
-            np.random.seed(seed)
-            torch.manual_seed(seed)
-            self.rng = np.random.RandomState(seed)
+        rng_seed = int(time.time()) if seed is None else seed
+
+        self.rng = np.random.default_rng(rng_seed)
+
+        self.rng_cpu = torch.Generator().manual_seed(rng_seed)
+
+        self.rng_gpu = None
+        if self.__config.device.type == 'cuda':
+            self.rng_gpu = torch.Generator(device = self.__config.device).manual_seed(rng_seed)
+        # GPU: torch.rand(4, generator = rng_gpu, device = 'self.__config.device')
+        # CPU: torch.rand(4, generator = rng_cpu)

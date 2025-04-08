@@ -85,7 +85,7 @@ def construct_problem_set(config):
                                               mode = "standard",
                                               num = 56,
                                               difficulty = config.difficulty)
-    elif problem in ['mmo', 'mmo-torch']:
+    elif problem in ['MMO', 'MMO-torch']:
         return mmo_dataset.MMO_Dataset.get_datasets(version=problem,
                                             train_batch_size=config.train_batch_size,
                                             test_batch_size=config.test_batch_size,

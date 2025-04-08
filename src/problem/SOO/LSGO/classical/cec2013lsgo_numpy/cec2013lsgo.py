@@ -1,4 +1,4 @@
-from .basic_problem import Basic_Problem
+from problem.basic_problem import Basic_Problem
 import numpy as np
 
 class CEC2013LSGO_Problem(Basic_Problem):

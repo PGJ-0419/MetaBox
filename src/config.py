@@ -8,7 +8,7 @@ def get_config(args=None):
     parser.add_argument('--problem', default = 'bbob', choices = ['bbob', 'bbob-torch', 'bbob-noisy', 'bbob-noisy-torch',
                                                                                 'bbob-surrogate', 'Symbolic_bench','Symbolic_bench-torch',
                                                                                 'lsgo', 'lsgo-torch', 'protein', 'protein-torch', 'uav', 'uav-torch',
-                                                                                'mmo', 'mmo-torch'],
+                                                                                'MMO', 'MMO-torch'],
                         help='specify the problem suite')
     parser.add_argument('--dim', type=int, default=10, help='dimension of search space')
     parser.add_argument('--upperbound', type=float, default=5, help='upperbound of search space')

@@ -300,9 +300,9 @@ class Terrain(UAV_Basic_Problem):
         b3 = 10
         b4 = 1
         b5 = 1
-        return b1 * J1 + b2 * J2 + b3 * J3 + b4 * J4 + b5 * J4
+        return b1 * J1 + b2 * J2 + b3 * J3 + b4 * J4 + b5 * J5
 
-    def are_paths_clear(self, x_all, y_all, z_abs, H, num_samples = 10):
+    def are_paths_clear(self, x_all, y_all, z_abs, H, num_samples = 12):
         """
         Check if all the line segments connecting adjacent points of NP paths are completely above the terrain H.
         :param x_all: (NP, N) shaped array, x coordinates of N points for each of NP paths

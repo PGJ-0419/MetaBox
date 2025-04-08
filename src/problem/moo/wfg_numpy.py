@@ -6,10 +6,10 @@ import geatpy as ea
 # from pymoo.util.function_loader import load_function
 # from pymoo.util.misc import powerset
 
-from problem.moo.basic_problem import Basic_Problem
+from problem.MOO.moo_basic import MOO_Basic_Problem
 
 
-class WFG(Basic_Problem):
+class WFG(MOO_Basic_Problem):
 
     def __init__(self, n_var, n_obj, k=None, l=None, **kwargs):
         super().__init__(n_var=n_var,

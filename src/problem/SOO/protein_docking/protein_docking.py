@@ -2,7 +2,7 @@ from os import path
 import torch
 import numpy as np
 from torch.utils.data import Dataset
-from .basic_problem import Basic_Problem
+from problem.basic_problem import Basic_Problem
 import time
 
 

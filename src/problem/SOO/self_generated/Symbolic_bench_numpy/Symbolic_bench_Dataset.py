@@ -1,8 +1,40 @@
 # import pickle
 import dill as pickle
 from torch.utils.data import Dataset
-from .basic_problem import GP_problem
+from problem.basic_problem import Basic_Problem
 import numpy as np
+
+
+class GP_problem(Basic_Problem):
+    def __init__(self, execute, problemID, lb, ub, dim):
+        self.problem = execute
+        self.lb = lb
+        self.ub = ub
+        self.optimum = None
+        self.opt = None
+        self.problemID = problemID
+        self.dim = dim
+        self.T1 = 0
+        self.FES = 0
+
+    def func(self, x):
+        return self.problem(x)
+
+    def __call__(self, x):
+        if len(x.shape) == 1 and x.shape[-1] == self.dim:
+            x = x.reshape(1, -1)
+            return self.func(x).reshape(-1)[0]
+        else:
+            return self.func(x)
+
+    def get_optimal(self):
+        return self.opt
+
+    def __str__(self):
+        return f'GP_Problem_{self.problemID}'
+
+    def __name__(self):
+        return f'GP_Problem_{self.problemID}'
 
 
 class Symbolic_bench_Dataset(Dataset):

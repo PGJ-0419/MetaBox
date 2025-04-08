@@ -195,7 +195,7 @@ class F9_torch(CFunction): # CF1
         self._CFunction__lambda_ = np.array([1.0, 1.0, 8.0, 8.0, 1.0 / 5.0, 1.0 / 5.0])
 
         # Load optima
-        o = np.loadtxt(path.join(path.dirname(__file__), 'mmo_data') + "/optima.dat")
+        o = np.loadtxt(path.join(path.dirname(__file__), 'MMO') + "/optima.dat")
         if o.shape[1] >= dim:
             self._CFunction__O_ = o[: self._CFunction__nofunc_, :dim]
         else:  # randomly initialize
@@ -242,7 +242,7 @@ class F10_torch(CFunction): # CF2
         )
 
         # Load optima
-        o = np.loadtxt(path.join(path.dirname(__file__), 'mmo_data') + "/optima.dat")
+        o = np.loadtxt(path.join(path.dirname(__file__), 'MMO') + "/optima.dat")
         if o.shape[1] >= dim:
             self._CFunction__O_ = o[: self._CFunction__nofunc_, :dim]
         else:  # randomly initialize
@@ -288,7 +288,7 @@ class F11_torch(CFunction): # CF3
         self._CFunction__lambda_ = np.array([1.0 / 4.0, 1.0 / 10.0, 2.0, 1.0, 2.0, 5.0])
 
         # Load optima
-        o = np.loadtxt(path.join(path.dirname(__file__), 'mmo_data') + "/optima.dat")
+        o = np.loadtxt(path.join(path.dirname(__file__), 'MMO') + "/optima.dat")
         if o.shape[1] >= dim:
             self._CFunction__O_ = o[: self._CFunction__nofunc_, :dim]
         else:  # randomly initialize
@@ -298,7 +298,7 @@ class F11_torch(CFunction): # CF3
 
         # Load M_: Rotation matrices
         if dim == 2 or dim == 3 or dim == 5 or dim == 10 or dim == 20:
-            fname = path.join(path.dirname(__file__), 'mmo_data') + "/CF3_M_D" + str(dim) + ".dat"
+            fname = path.join(path.dirname(__file__), 'MMO') + "/CF3_M_D" + str(dim) + ".dat"
             self._CFunction__load_rotmat(fname)
         else:
             # M_ Identity matrices
@@ -340,7 +340,7 @@ class F12_torch(CFunction): # CF4
         )
 
         # Load optima
-        o = np.loadtxt(path.join(path.dirname(__file__), 'mmo_data') + "/optima.dat")
+        o = np.loadtxt(path.join(path.dirname(__file__), 'MMO') + "/optima.dat")
         if o.shape[1] >= dim:
             self._CFunction__O_ = o[: self._CFunction__nofunc_, :dim]
         else:  # randomly initialize
@@ -350,7 +350,7 @@ class F12_torch(CFunction): # CF4
 
         # Load M_: Rotation matrices
         if dim == 2 or dim == 3 or dim == 5 or dim == 10 or dim == 20:
-            fname = path.join(path.dirname(__file__), 'mmo_data') + "/CF4_M_D" + str(dim) + ".dat"
+            fname = path.join(path.dirname(__file__), 'MMO') + "/CF4_M_D" + str(dim) + ".dat"
             self._CFunction__load_rotmat(fname)
         else:
             # M_ Identity matrices 

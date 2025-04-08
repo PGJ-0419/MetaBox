@@ -1,9 +1,9 @@
 import geatpy as ea
 import numpy as np
-from problem.moo.basic_problem import Basic_Problem
+from problem.MOO.moo_basic import MOO_Basic_Problem
 
 
-class UF1(Basic_Problem):
+class UF1(MOO_Basic_Problem):
     def __init__(self):
         self.n_obj = 2
         self.n_var = 30

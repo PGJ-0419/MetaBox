@@ -86,9 +86,9 @@ class MMO_Dataset(Dataset):
             elif id > 10:
                 ub = 5.0
 
-            if version == 'mmo':
+            if version == 'MMO':
                 instance = eval(f'F{functions[id - 1]}')(dim= dimensions[id - 1], lb = lb, ub = ub, fopt= fopt[id - 1], rho=rho[id - 1], nopt=nopt[id - 1], maxfes=maxfes[id - 1])
-            elif version == 'mmo-torch':
+            elif version == 'MMO-torch':
                 instance = eval(f'F{functions[id - 1]}_torch')(dim= dimensions[id - 1], lb = lb, ub = ub, fopt= fopt[id - 1], rho=rho[id - 1], nopt=nopt[id - 1], maxfes=maxfes[id - 1])
             else:
                 raise ValueError(f'{version} version is invalid or is not supported yet.')

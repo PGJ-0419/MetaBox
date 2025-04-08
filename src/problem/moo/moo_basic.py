@@ -1,12 +1,12 @@
 import numpy as np
 import torch as th
 import time
-
+from problem.basic_problem import Basic_Problem
 
 
     
     
-class Basic_Problem:
+class MOO_Basic_Problem(Basic_Problem):
     def __init__(self,
                  n_var=-1,
                  n_obj=1,

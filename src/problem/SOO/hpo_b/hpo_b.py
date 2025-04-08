@@ -3,7 +3,7 @@ import xgboost as xgb
 import pickle
 import os, time
 from .utils import *
-from ...basic_problem import Basic_Problem
+from problem.basic_problem import Basic_Problem
 
 
 class HPOB_Problem(Basic_Problem):

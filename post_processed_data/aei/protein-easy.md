@@ -1,1 +1,0 @@
-![protein-easy-aei](pics/protein-easy.png)

@@ -1,1 +1,0 @@
-![synthetic-diff-aei](pics/synthetic-diff.png)

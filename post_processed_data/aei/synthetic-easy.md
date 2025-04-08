@@ -1,1 +1,0 @@
-![synthetic-easy-aei](pics/synthetic-easy.png)

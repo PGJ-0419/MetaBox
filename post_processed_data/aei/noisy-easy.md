@@ -1,1 +1,0 @@
-![noisy-easy-aei](pics/noisy-easy.png)

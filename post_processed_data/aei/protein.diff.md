@@ -1,1 +1,0 @@
-![protein-diff-aei](pics/protein-diff.png)

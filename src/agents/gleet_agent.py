@@ -239,7 +239,7 @@ class GLEET_Agent(PPO_Agent):
                       num_cpus: Optional[Union[int, None]] = 1,
                       num_gpus: int = 0,
                       tb_logger = None,
-                      required_info = []):
+                      required_info = {}):
         if self.device != 'cpu':
             num_gpus = max(num_gpus, 1)
         env = ParallelEnv(envs, para_mode, asynchronous, num_cpus, num_gpus)

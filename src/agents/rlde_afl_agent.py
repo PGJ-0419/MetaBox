@@ -361,7 +361,7 @@ class RLDE_AFL_Agent(PPO_Agent):
         self.config = config
 
         self.config.optimizer = 'Adam'
-        self.config.lr = 1e-5
+        self.config.lr = 1e-4
 
         self.config.fe_hidden_dim = 64
         self.config.fe_n_layers = 1
@@ -403,9 +403,9 @@ class RLDE_AFL_Agent(PPO_Agent):
                       para_mode: Literal['dummy', 'subproc', 'ray', 'ray-subproc'] = 'dummy',
                       asynchronous: Literal[None, 'idle', 'restart', 'continue'] = None,
                       num_cpus: Optional[Union[int, None]] = 1,
-                      num_gpus: int = 0,\
+                      num_gpus: int = 0,
                       tb_logger = None,
-                      required_info = []):
+                      required_info = {}):
         if self.device != 'cpu':
             num_gpus = max(num_gpus, 1)
 
@@ -588,8 +588,8 @@ class RLDE_AFL_Agent(PPO_Agent):
                     env_cost = env.get_env_attr('cost')
                     return_info['normalizer'] = env_cost[0]
                     return_info['gbest'] = env_cost[-1]
-                    for key in required_info:
-                        return_info[key] = env.get_env_attr(key)
+                    for key in required_info.keys():
+                        return_info[key] = env.get_env_attr(required_info[key])
                     env.close()
                     return self.learning_time >= self.config.max_learning_step, return_info
 
@@ -601,8 +601,8 @@ class RLDE_AFL_Agent(PPO_Agent):
         env_cost = env.get_env_attr('cost')
         return_info['normalizer'] = env_cost[0]
         return_info['gbest'] = env_cost[-1]
-        for key in required_info:
-            return_info[key] = env.get_env_attr(key)
+        for key in required_info.keys():
+            return_info[key] = env.get_env_attr(required_info[key])
         env.close()
         return is_train_ended, return_info
 

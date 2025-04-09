@@ -128,7 +128,7 @@ class DQN_Agent(Basic_Agent):
                       num_cpus: Optional[Union[int, None]]=1,
                       num_gpus: int=0,
                       tb_logger = None,
-                      required_info=['normalizer', 'gbest']):
+                      required_info={}):
         if self.device != 'cpu':
             num_gpus = max(num_gpus, 1)
         env = ParallelEnv(envs, para_mode, asynchronous, num_cpus, num_gpus)
@@ -206,8 +206,8 @@ class DQN_Agent(Basic_Agent):
                     env_cost = env.get_env_attr('cost')
                     return_info['normalizer'] = env_cost[0]
                     return_info['gbest'] = env_cost[-1]
-                    for key in required_info:
-                        return_info[key] = env.get_env_attr(key)
+                    for key in required_info.keys():
+                        return_info[key] = env.get_env_attr(required_info[key])
                     env.close()
                     return self.learning_time >= self.config.max_learning_step, return_info
         
@@ -218,8 +218,8 @@ class DQN_Agent(Basic_Agent):
         env_cost = env.get_env_attr('cost')
         return_info['normalizer'] = env_cost[0]
         return_info['gbest'] = env_cost[-1]
-        for key in required_info:
-            return_info[key] = env.get_env_attr(key)
+        for key in required_info.keys():
+            return_info[key] = env.get_env_attr(required_info[key])
             # print(f"{key} : {return_info[key]}")
         env.close()
         

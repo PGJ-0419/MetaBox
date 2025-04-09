@@ -110,7 +110,7 @@ class VDN_Agent(Basic_Agent):
                       asynchronous: Literal[None, 'idle', 'restart', 'continue'] = None,
                       num_cpus: Optional[Union[int, None]] = 1,
                       num_gpus: int = 0,
-                      required_info=None):
+                      required_info={}):
         if required_info is None:
             required_info = {'best_igd': 'best_value',
                              }
@@ -186,8 +186,8 @@ class VDN_Agent(Basic_Agent):
 
         is_train_ended = self.learning_time >= self.config.max_learning_step
         return_info = {'return': _R, 'learn_steps': self.learning_time, 'q_values':torch.tensor(Q_list), 'loss':_loss}
-        # for key in required_info.keys():
-        #     return_info[key] = env.get_env_attr(required_info[key])
+        for key in required_info.keys():
+            return_info[key] = env.get_env_attr(required_info[key])
         env.close()
 
         return is_train_ended, return_info

@@ -1,10 +1,10 @@
 from scipy.special import softmax
 from typing import Optional, Union, Literal, List
-from basic_agent.TabularQ_Agent import *
+from src.basic_agent.QLearning_Agent import *
 from basic_agent.utils import save_class
 
 
-class QLPSO_Agent(TabularQ_Agent):
+class QLPSO_Agent(QLearning_Agent):
     def __init__(self, config):
         self.config = config
         # define hyperparameters that agent needs
@@ -47,13 +47,19 @@ class QLPSO_Agent(TabularQ_Agent):
                       envs,
                       seeds: Optional[Union[int, List[int], np.ndarray]],
                       para_mode: Literal['dummy', 'subproc', 'ray', 'ray-subproc']='dummy',
-                      asynchronous: Literal[None, 'idle', 'restart', 'continue']=None,
-                      num_cpus: Optional[Union[int, None]]=1,
-                      num_gpus: int=0,
-                      required_info={}):
-        if self.device != 'cpu':
-            num_gpus = max(num_gpus, 1)
-        env = ParallelEnv(envs, para_mode, asynchronous, num_cpus, num_gpus)
+                      # todo: asynchronous: Literal[None, 'idle', 'restart', 'continue'] = None,
+                      # num_cpus: Optional[Union[int, None]] = 1,
+                      # num_gpus: int = 0,
+                      compute_resource = {},
+                      tb_logger = None,
+                      required_info = {}):
+        num_cpus = None
+        num_gpus = 0
+        if 'num_cpus' in compute_resource.keys():
+            num_cpus = compute_resource['num_cpus']
+        if 'num_gpus' in compute_resource.keys():
+            num_gpus = compute_resource['num_gpus']
+        env = ParallelEnv(envs, para_mode, num_cpus=num_cpus, num_gpus=num_gpus)
         env.seed(seeds)
         # params for training
         gamma = self.gamma

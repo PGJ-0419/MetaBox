@@ -407,7 +407,7 @@ class GLEET_Agent(PPO_Agent):
                     save_class(self.config.agent_save_dir, 'checkpoint' + str(self.cur_checkpoint), self)
                     self.cur_checkpoint += 1
 
-                if not self.config.no_tb and self.learning_time % int(self.config.log_step) == 0:
+                if not self.config.no_tb:
                     self.log_to_tb_train(tb_logger, self.learning_time,
                                          grad_norms,
                                          reinforce_loss, baseline_loss,
@@ -487,4 +487,29 @@ class GLEET_Agent(PPO_Agent):
             results[key] = env.get_env_attr(required_info[key])
         return results
 
+    def rollout_episode(self,
+                        env,
+                        seed = None,
+                        required_info = {}):
+        with torch.no_grad():
+            if seed is not None:
+                env.seed(seed)
+            is_done = False
+            state = env.reset()
+            R = 0
+            while not is_done:
+                try:
+                    state = torch.FloatTensor(state).unsqueeze(0).to(self.device)
+                except:
+                    state = [state]
+                action = self.actor(state)[0]
+                action = action.cpu().numpy().squeeze()
+                state, reward, is_done, info = env.step(action)
+                R += reward
+            env_cost = env.get_env_attr('cost')
+            env_fes = env.get_env_attr('fes')
+            results = {'cost': env_cost, 'fes': env_fes, 'return': R}
+            for key in required_info.keys():
+                results[key] = getattr(env, required_info[key])
+            return results
 

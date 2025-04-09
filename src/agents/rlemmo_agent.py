@@ -394,7 +394,7 @@ class RLEMMO_Agent(PPO_Agent):
                     save_class(self.config.agent_save_dir, 'checkpoint' + str(self.cur_checkpoint), self)
                     self.cur_checkpoint += 1
 
-                if not self.config.no_tb and self.learning_time % int(self.config.log_step) == 0:
+                if not self.config.no_tb:
                     self.log_to_tb_train(tb_logger, self.learning_time,
                                          grad_norms,
                                          reinforce_loss, baseline_loss,
@@ -480,4 +480,31 @@ class RLEMMO_Agent(PPO_Agent):
             results[key] = env.get_env_attr(required_info[key])
         return results
 
+    def rollout_episode(self,
+                        env,
+                        seed = None,
+                        required_info = {}):
+        with torch.no_grad():
+            if seed is not None:
+                env.seed(seed)
+            is_done = False
+            state = env.reset()
+            R = 0
+            while not is_done:
+                try:
+                    state = torch.FloatTensor(state).unsqueeze(0).to(self.device)
+                except:
+                    state = [state]
+                action = self.actor(state, sampling = False)[0]
+                action = action.cpu().numpy().squeeze()
+                state, reward, is_done, info = env.step(action)
+                R += reward
+            env_cost = env.get_env_attr('cost')
+            env_PRs = env.get_env_attr('PRs')
+            env_SRs = env.get_env_attr('SRs')
+            env_T1 = env.get_env_attr('T1')
+            results = {'return': R, 'cost': env_cost, 'pr': env_PRs, 'sr': env_SRs, 'T1': env_T1}
+            for key in required_info.keys():
+                results[key] = getattr(env, required_info[key])
+            return results
 

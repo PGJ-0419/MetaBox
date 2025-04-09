@@ -34,12 +34,12 @@ class Learnable_Optimizer:
     def seed(self, seed = None):
         rng_seed = int(time.time()) if seed is None else seed
 
-        self.rng = np.random.default_rng(rng_seed)
+        self.rng = np.random.RandomState(rng_seed)
 
         self.rng_cpu = torch.Generator().manual_seed(rng_seed)
 
         self.rng_gpu = None
-        if self.__config.device.type == 'cuda':
+        if self.__config.device != 'cpu':
             self.rng_gpu = torch.Generator(device = self.__config.device).manual_seed(rng_seed)
         # GPU: torch.rand(4, generator = rng_gpu, device = 'self.__config.device')
         # CPU: torch.rand(4, generator = rng_cpu)

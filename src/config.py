@@ -89,7 +89,6 @@ def get_config(args=None):
     parser.add_argument('--test_run', type = int, default = 51)
 
     parser.add_argument('--no_tb', action='store_true', default = False, help = 'disable tensorboard logging')
-    parser.add_argument('--log_step', type = int, default = 50, help = 'log every log_step steps')
 
 
     config = parser.parse_args(args)

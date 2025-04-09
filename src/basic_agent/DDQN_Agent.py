@@ -208,7 +208,7 @@ class DDQN_Agent(Basic_Agent):
                     for target_parma, parma in zip(self.target_model.parameters(), self.model.parameters()):
                         target_parma.data.copy_(parma.data)
 
-                if not self.config.no_tb and self.learning_time % int(self.config.log_step) == 0:
+                if not self.config.no_tb:
                     self.log_to_tb_train(tb_logger, self.learning_time,
                                          grad_norms,
                                          loss,

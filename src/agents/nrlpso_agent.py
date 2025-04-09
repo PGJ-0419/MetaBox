@@ -1,8 +1,9 @@
 from scipy.special import softmax
 from typing import Optional, Union, Literal, List
-from src.basic_agent.QLearning_Agent import *
+from basic_agent.QLearning_Agent import QLearning_Agent
 from basic_agent.utils import save_class
-
+import numpy as np
+import torch
 
 class NRLPSO_Agent(QLearning_Agent):
     def __init__(self, config):
@@ -91,7 +92,7 @@ class NRLPSO_Agent(QLearning_Agent):
                 save_class(self.config.agent_save_dir, 'checkpoint'+str(self.cur_checkpoint), self)
                 self.cur_checkpoint += 1
 
-            if not self.config.no_tb and self.learning_time % int(self.config.log_step) == 0:
+            if not self.config.no_tb:
                 self.log_to_tb_train(tb_logger, self.learning_time,
                                      TD_error.mean(),
                                      _R, _reward,

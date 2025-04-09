@@ -1,5 +1,4 @@
 from typing import Tuple
-from agent.basic_agent import Basic_Agent
 
 import torch
 import math, copy
@@ -9,9 +8,9 @@ from torch import nn
 import torch
 from torch.distributions import Normal
 import torch.nn.functional as F
-from agent.utils import *
 from VectorEnv.great_para_env import ParallelEnv
-
+from basic_agent.utils import *
+from basic_agent.PPO_Agent import PPO_Agent
 class Actor(nn.Module):
     def __init__(self, n_state, n_action, hidden_dim=64):
         super().__init__()
@@ -96,46 +95,24 @@ def clip_grad_norms(param_groups, max_norm=math.inf):
     return grad_norms, grad_norms_clipped
 
 
-class L2O_Agent_Parallel(Basic_Agent):
+class L2O_Agent(PPO_Agent):
     def __init__(self, config):
-        super().__init__(config)
         self.config = config
 
-        # define parameters
-        self.gamma = 0.99
-        self.n_step = 10
-        self.K_epochs = 3
-        self.eps_clip = 0.2
-        self.max_grad_norm = 0.1
-        self.device = self.config.device
-        self.n_state = self.config.task_cnt * 7 + 1
-        self.n_action = self.config.task_cnt * 3
-        
-        # figure out the actor network
-        # self.actor = None
-        self.actor = Actor(self.n_state, self.n_action)
-        
-        # figure out the critic network
-        # self.critic = None
-        self.critic = Critic(self.n_state)
-        assert hasattr(self, 'actor') and hasattr(self, 'critic')
+        self.config.optimizer = 'Adam'
+        self.config.lr = 1e-5
 
-        # figure out the optimizer
-        self.optimizer = torch.optim.Adam(
-            [{'params': self.actor.parameters(), 'lr': 1e-5}] +
-            [{'params': self.critic.parameters(), 'lr': 1e-5}])
+        self.config.gamma = 0.99
+        self.config.n_step = 10
+        self.config.K_epochs = 3
+        self.config.eps_clip = 0.2
+        self.config.max_grad_norm = 0.1
+        self.config.n_state = self.config.task_cnt * 7 + 1
+        self.config.n_action = self.config.task_cnt * 3
 
-        # move to device
-        self.actor.to(self.device)
-        self.critic.to(self.device)
-
-        # init learning time
-        self.learning_time = 0
-        self.cur_checkpoint = 0
-
-        # save init agent
-        save_class(self.config.agent_save_dir,'checkpoint'+str(self.cur_checkpoint),self)
-        self.cur_checkpoint += 1
+        actor = Actor(self.config.n_state, self.config.n_action)
+        critic = Critic(self.config.n_state)
+        super().__init__(self.config, {'actor': actor, 'critic': critic}, self.config.lr)
 
     def update_setting(self, config):
         self.config.max_learning_step = config.max_learning_step

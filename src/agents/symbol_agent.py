@@ -370,6 +370,36 @@ class SYMBOL_Agent(PPO_Agent):
             results[key] = env.get_env_attr(required_info[key])
         return results
 
+    def rollout_episode(self,
+                        env,
+                        seed = None,
+                        required_info = {}):
+        with torch.no_grad():
+            if seed is not None:
+                env.seed(seed)
+            is_done = False
+            state = env.reset()
+            R = 0
+            while not is_done:
+                try:
+                    state = torch.FloatTensor(state).to(self.device)
+                except:
+                    state = [state]
+                seq, const_seq, log_prob = self.actor(state, save_data = False)
+                action = []
+                for s, cs in zip(seq, const_seq):
+                    expr = construct_action(seq = s, const_seq = cs, tokenizer = self.tokenizer)
+                    action.append({'expr': expr, 'skip_step': self.config.skip_step})
+
+                state, reward, is_done, info = env.step(action)
+                R += reward
+            env_cost = env.get_env_attr('cost')
+            env_fes = env.get_env_attr('fes')
+            results = {'cost': env_cost, 'fes': env_fes, 'return': R}
+            for key in required_info.keys():
+                results[key] = getattr(env, required_info[key])
+            return results
+
 def construct_action(seq, const_seq, tokenizer):
     pre,c_pre = get_prefix_with_consts(seq, const_seq, 0)
     str_expr = [tokenizer.decode(pre[i]) for i in range(len(pre))]

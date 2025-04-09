@@ -3,7 +3,8 @@ from torch import nn
 from basic_agent.REINFORCE_Agent import *
 from basic_agent.utils import *
 from typing import Optional, Union, Literal, List
-
+import numpy as np
+import torch
 class PolicyNet(nn.Module):
     def __init__(self, config):
         super(PolicyNet, self).__init__()
@@ -101,6 +102,7 @@ class LDE_Agent(REINFORCE_Agent):
         
         env.seed(seeds)
         _R = torch.zeros(len(env))
+        _reward = []
         for l in range(self.config.TRAJECTORY_NUM):
             input_net = env.reset()
             try:
@@ -126,6 +128,7 @@ class LDE_Agent(REINFORCE_Agent):
                 cs_batch.append(torch.squeeze(c0, axis=0))
                 rewards_batch.append(reward.reshape(self.__BATCH_SIZE))
                 _R += reward.reshape(-1)
+                _reward.append(reward)
                 h0 = h_
                 c0 = c_
                 input_net = next_input.copy()
@@ -149,12 +152,21 @@ class LDE_Agent(REINFORCE_Agent):
         all_eps_dis_reward = self.__discounted_norm_rewards(np.hstack(rewards))
         loss = - torch.mean(log_prob * torch.FloatTensor(all_eps_dis_reward).to(self.device))
         loss.backward()
+        grad_norms = clip_grad_norms(self.optimizer.param_groups)
+
         self.optimizer.step()
         self.learning_time += 1
 
         if self.learning_time >= (self.config.save_interval * self.cur_checkpoint):
             save_class(self.config.agent_save_dir,'checkpoint'+str(self.cur_checkpoint),self)
             self.cur_checkpoint+=1
+
+        if not self.config.no_tb:
+            self.log_to_tb_train(tb_logger, self.learning_time,
+                                 grad_norms,
+                                 loss,
+                                 _R, _reward,
+                                 log_prob)
 
         is_train_ended = self.learning_time >= self.config.max_learning_step
         _Rs = _R.detach().numpy().tolist()

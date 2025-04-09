@@ -77,7 +77,7 @@ from agents import (
     RL_DAS_Agent,
     SYMBOL_Agent,
     Surr_RLDE_Agent,
-    RLEMMO_Agent
+    RLEMMO_Agent,
 )
 
 

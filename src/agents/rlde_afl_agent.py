@@ -653,3 +653,30 @@ class RLDE_AFL_Agent(PPO_Agent):
             results[key] = env.get_env_attr(required_info[key])
         return results
 
+    def rollout_episode(self,
+                        env,
+                        seed = None,
+                        required_info = {}):
+        self.fe.set_off_train()
+        self.actor.eval()
+        self.critic.eval()
+        with torch.no_grad():
+            env.seed(seed)
+            is_done = False
+            state = env.reset()
+            R = 0
+            while not is_done:
+                try:
+                    state = torch.FloatTensor(state).to(self.device)
+                except:
+                    pass
+                feature = self.fe(state).to(self.config.device)
+                action = self.actor.get_action(feature)[0].detach().cpu().numpy()
+                state, reward, is_done, info = env.step(action)
+                R += reward
+            env_cost = env.get_env_attr('cost')
+            env_fes = env.get_env_attr('fes')
+            results = {'cost': env_cost, 'fes': env_fes, 'return': R}
+            for key in required_info.keys():
+                results[key] = env.get_env_attr(required_info[key])
+            return results

@@ -332,7 +332,12 @@ class Tester(object):
             for i, problem in enumerate(self.test_set.data):
                 for agent_id, (agent, optimizer) in enumerate(zip(self.agent_for_cp, self.l_optimizer_for_cp)):
                     # for agent an env_list [1 * len(test_run)]
-
+                    '''
+                        example: bs = 3 test_run = 2 agent A1 A2
+                        [        A1        |        A2        |        A1        |        A2        |        A1        |        A2        ]
+                        [O1_F1_r1--O1_F1_r2|O2_F1_r1--O2_F1_r2|O1_F2_r1--O1_F2_r2|O2_F2_r1--O2_F2_r2|O2_F3_r1--O2_F3_r2|O2_F3_r1--O2_F3_r2]
+                        PS：Test results are not affected by bs 
+                    '''
                     env_list = [PBO_Env(copy.deepcopy(problem), copy.deepcopy(optimizer)) for _ in range(test_run)]
                     meta_test_data = agent.rollout_batch_episode(envs = env_list,
                                                                  seeds = seed_list,
@@ -381,6 +386,12 @@ class Tester(object):
                 for agent_id, (agent, optimizer) in enumerate(zip(self.agent_for_cp, self.l_optimizer_for_cp)):
                     # for agent an env_list [bs * len(test_run)]
                     # [F1 F1 F1 F2 F2 F2 F3 F3 F3...]
+                    '''
+                        example: bs = 3 test_run = 2 agent A1 A2
+                        [                            A1                            |                            A2                            ]    
+                        [O1_F1_r1--O1_F1_r2--O1_F2_r1--O1_F2_r2--O1_F3_r1--O1_F3_r2|O2_F1_r1--O2_F1_r2--O2_F2_r1--O2_F2_r2--O2_F3_r1--O2_F3_r2]
+                        PS：Test results can be affected by bs
+                    '''
                     env_list = [
                         PBO_Env(copy.deepcopy(p), copy.deepcopy(optimizer))
                         for p in problem  # bs
@@ -434,59 +445,13 @@ class Tester(object):
                     example: bs = 3 test_run = 2 agent A1 A2
                     [   A1   |   A1   |   A1   |   A1   |   A1   |   A1   |   A2   |   A2   |   A2   |   A2   |   A2   |   A2   ]
                     [O1_F1_r1|O1_F1_r2|O1_F2_r1|O1_F2_r2|O1_F3_r1|O1_F3_r2|O2_F1_r1|O2_F1_r2|O2_F2_r1|O2_F2_r2|O2_F3_r1|O2_F3_r2]
+                    PS：Test results are not affected by bs          
                 '''
-                agent_list = [MetaBBO_Env(copy.deepcopy(agent)) for agent in self.agent_for_cp for _ in range(test_run * bs)]
-                env_list = [{'env': PBO_Env(copy.deepcopy(p), copy.deepcopy(optimizer)), 'seed': seed} for optimizer in self.l_optimizer_for_cp for p in problem for seed in seed_list]
-
-                # env_list = []
-                #
-                # # 拼字典
-                # for optimizer in self.t_optimizer_for_cp:
-                #     temp_list = [{'env': PBO_Env(copy.deepcopy(p), copy.deepcopy(optimizer)), 'seed': seed} for p in problem for seed in seed_list]
-                #     env_list = env_list + temp_list
-
-                # agent parallel
-
-                MetaBBO = ParallelEnv(agent_list, para_mode = 'ray', asynchronous = None, num_cpus = 1, num_gpus = 0)
-
-                meta_test_data = MetaBBO.customized_method('run_batch_episode', env_list)
-                pbar_info = {'Testing': "MetaBBO",
-                             }
-                pbar.set_postfix(pbar_info)
-                pbar.update(1)
-
-                # tradition
-                optimizer_list = [BBO_Env(copy.deepcopy(optimizer)) for optimizer in self.t_optimizer_for_cp for _ in range(test_run * bs)]
-                problem_list = [{'problem': copy.deepcopy(p)} for _ in range(len(self.t_optimizer_for_cp)) for p in problem for _ in range(test_run)]
-
-
-                # optimizer_list = []
-                # problem_list = []
-                # for optimizer in self.t_optimizer_for_cp:
-                #     for _ in range(test_run * bs):
-                #         optimizer_list.append(BBO_Env(copy.deepcopy(optimizer)))
-                #     problem_list.append({'problem': copy.deepcopy(p)} for p in problem for _ in range(test_run))
-                BBO = ParallelEnv(optimizer_list, para_mode = 'ray', asynchronous = None, num_cpus = 1, num_gpus = 0)
-                BBO.seed(seed_list * bs * len(self.agent_for_cp))
-                test_data = BBO.customized_method('run_batch_episode', problem_list)
-                pbar_info = {'Testing': "BBO",}
-                pbar.set_postfix(pbar_info)
-                pbar.update(1)
-
-                '''
-                    example: bs = 3 test_run = 2 agent A1 A2
-                    [   A1   |   A1   |   A1   |   A1   |   A1   |   A1   |   A2   |   A2   |   A2   |   A2   |   A2   |   A2   ]
-                    [O1_F1_r1|O1_F1_r2|O1_F2_r1|O1_F2_r2|O1_F3_r1|O1_F3_r2|O2_F1_r1|O2_F1_r2|O2_F2_r1|O2_F2_r2|O2_F3_r1|O2_F3_r2]
-                '''
-                agent_list = [MetaBBO_Env(copy.deepcopy(agent)) for agent in self.agent_for_cp for _ in range(test_run * bs)]
-                env_list = [{'env': PBO_Env(copy.deepcopy(p), copy.deepcopy(optimizer)), 'seed': seed} for optimizer in self.l_optimizer_for_cp for p in problem for seed in seed_list]
-
-                # env_list = []
-                #
-                # # 拼字典
-                # for optimizer in self.t_optimizer_for_cp:
-                #     temp_list = [{'env': PBO_Env(copy.deepcopy(p), copy.deepcopy(optimizer)), 'seed': seed} for p in problem for seed in seed_list]
-                #     env_list = env_list + temp_list
+                agent_list = [MetaBBO_Env(copy.deepcopy(agent)) for agent in self.agent_for_cp
+                                                                for _ in range(test_run * bs)]
+                env_list = [{'env': PBO_Env(copy.deepcopy(p), copy.deepcopy(optimizer)), 'seed': seed} for optimizer in self.l_optimizer_for_cp
+                                                                                                       for p in problem
+                                                                                                       for seed in seed_list]
 
                 # agent parallel
 

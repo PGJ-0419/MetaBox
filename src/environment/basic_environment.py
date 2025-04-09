@@ -99,8 +99,8 @@ class MetaBBO_Env(gym.Env):
         super(MetaBBO_Env, self).__init__()
         self.agent = agent
 
-    def run_batch_episode(self, env):
-        return self.agent.run_episode(env)
+    def run_batch_episode(self, env, seed, required_info = {}):
+        return self.agent.run_episode(env, seed, required_info)
 
     # def seed(self, seed):
     #     self.agent.seed(seed)

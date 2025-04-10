@@ -13,6 +13,11 @@ class DEAP_DE(Basic_Optimizer):
         config.Cr = 0.5
 
         self.__config = config
+
+        # set global random state
+        # Only support Ray
+        np.random.set_state(self.rng.get_state())
+
         self.__toolbox = base.Toolbox()
         creator.create("Fitnessmin", base.Fitness, weights=(-1.0,))
         creator.create("Individual", list, fitness=creator.Fitnessmin)

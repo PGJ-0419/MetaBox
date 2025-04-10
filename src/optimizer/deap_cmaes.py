@@ -12,6 +12,11 @@ class DEAP_CMAES(Basic_Optimizer):
         super().__init__(config)
         config.NP = 50
         self.__config = config
+
+        # set global random state
+        # Only support Ray
+        np.random.set_state(self.rng.get_state())
+
         self.__toolbox = base.Toolbox()
         self.__creator = creator
         self.__algorithm = algorithms

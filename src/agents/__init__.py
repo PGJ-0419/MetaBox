@@ -1,5 +1,5 @@
 from .gleet_agent import GLEET_Agent
-from .de_ddqn_agent import DE_DDQN_Agent
+from .deddqn import DEDDQN
 from .dedqn_agent import DEDQN_Agent
 from .qlpso_agent import QLPSO_Agent
 from .nrlpso_agent import NRLPSO_Agent

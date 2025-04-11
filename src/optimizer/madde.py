@@ -22,7 +22,7 @@ class MadDE(Basic_Optimizer):
         self.__n_logpoint = config.n_logpoint
         self.log_interval = config.log_interval
 
-        self.full_metadata = config.full_metadata
+        self.full_meta_data = config.full_meta_data
 
     def __ctb_w_arc(self, group, best, archive, Fs):
         NP, dim = group.shape
@@ -196,10 +196,9 @@ class MadDE(Basic_Optimizer):
         self.log_index = 1
         self.cost = [self.gbest]
 
-        if self.full_metadata:
+        if self.full_meta_data:
             self.meta_X = [self.__population]
             self.meta_Cost = [self.__cost]
-            self.meta_Fes = [self.__FEs]
 
     def __update(self, problem):
         self.__sort()
@@ -267,10 +266,9 @@ class MadDE(Basic_Optimizer):
         self.__cost = self.__cost[:self.__NP]
         self.__archive = self.__archive[:self.__NA]
 
-        if self.full_metadata:
+        if self.full_meta_data:
             self.meta_X.append(self.__population)
             self.meta_Cost.append(self.__cost)
-            self.meta_Fes.append(self.__FEs)
 
 
         if np.min(self.__cost) < self.gbest:
@@ -296,8 +294,8 @@ class MadDE(Basic_Optimizer):
             self.cost.append(self.gbest)
         results = {'cost': self.cost, 'fes': self.__FEs}
 
-        if self.full_metadata:
-            metadata = {'X': self.meta_X, 'Cost': self.meta_Cost, 'Fes': self.meta_Fes}
+        if self.full_meta_data:
+            metadata = {'X': self.meta_X, 'Cost': self.meta_Cost}
             results['metadata'] = metadata
 
         return results

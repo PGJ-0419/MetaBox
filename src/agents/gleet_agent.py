@@ -510,11 +510,10 @@ class GLEET_Agent(PPO_Agent):
             env_fes = env.get_env_attr('fes')
             results = {'cost': env_cost, 'fes': env_fes, 'return': R}
 
-            if self.config.full_metadata:
+            if self.config.full_meta_data:
                 meta_X = env.get_env_attr('meta_X')
                 meta_Cost = env.get_env_attr('meta_Cost')
-                meta_Fes = env.get_env_attr('meta_Fes')
-                metadata = {'X': meta_X, 'Cost': meta_Cost, 'Fes': meta_Fes}
+                metadata = {'X': meta_X, 'Cost': meta_Cost}
                 results['metadata'] = metadata
 
             for key in required_info.keys():

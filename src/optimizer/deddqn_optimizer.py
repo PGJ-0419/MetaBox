@@ -4,7 +4,7 @@ from optimizer.learnable_optimizer import Learnable_Optimizer
 from optimizer.operators import rand_1_single, rand_2_single, rand_to_best_2_single, cur_to_rand_1_single, binomial, clipping
 
 
-class DE_DDQN_Optimizer(Learnable_Optimizer):
+class DEDDQN_Optimizer(Learnable_Optimizer):
     def __init__(self, config):
         super().__init__(config)
         config.F = 0.5
@@ -71,6 +71,11 @@ class DE_DDQN_Optimizer(Learnable_Optimizer):
                 self.__N_succ[op].append(deque(maxlen=self.__gen_max))
         self.log_index = 1
         self.cost = [self.__c_gbest]
+
+        if self.__config.full_metadata:
+            self.meta_X = [self.__X.copy()]
+            self.meta_Cost = [self.__cost.copy()]
+
         return self.__get_state(problem)
 
     def __get_state(self, problem):
@@ -212,6 +217,10 @@ class DE_DDQN_Optimizer(Learnable_Optimizer):
             is_done = (self.fes >= self.__maxFEs or self.__c_gbest <= 1e-8)
         # get next state
         next_state = self.__get_state(problem)
+
+        if self.__config.full_metadata:
+            self.meta_X.append(self.__X)
+            self.meta_Cost.append(self.__cost)
 
         if is_done:
             if len(self.cost) >= self.__config.n_logpoint + 1:

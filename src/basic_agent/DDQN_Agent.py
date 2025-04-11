@@ -261,6 +261,11 @@ class DDQN_Agent(Basic_Agent):
             env_cost = env.get_env_attr('cost')
             env_fes = env.get_env_attr('fes')
             results = {'cost': env_cost, 'fes': env_fes, 'return': _Rs}
+            if self.config.full_meta_data:
+                meta_X = env.get_env_attr('meta_X')
+                meta_Cost = env.get_env_attr('meta_Cost')
+                metadata = {'X': meta_X, 'Cost': meta_Cost}
+                results['metadata'] = metadata
             for key in required_info:
                 results[key] = getattr(env, key)
             return results

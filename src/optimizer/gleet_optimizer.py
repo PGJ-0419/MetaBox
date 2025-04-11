@@ -112,7 +112,6 @@ class GLEET_Optimizer(Learnable_Optimizer):
         if self.__config.full_metadata:
             self.meta_X = [self.particles['current_position']]
             self.meta_Cost = [self.particles['c_cost']]
-            self.meta_Fes = [self.fes]
 
         return np.concatenate((state,gp_cat),axis=-1)   # ps, 9+18
         
@@ -277,7 +276,6 @@ class GLEET_Optimizer(Learnable_Optimizer):
         if self.__config.full_metadata:
             self.meta_X.append(self.particles['current_position'])
             self.meta_Cost.append(self.particles['c_cost'])
-            self.meta_Fes.append(self.fes)
 
 
         # see if the end condition is satisfied

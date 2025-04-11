@@ -2,7 +2,7 @@ from .basic_optimizer import *
 from .learnable_optimizer import *
 from .operators import *
 
-from .de_ddqn_optimizer import DE_DDQN_Optimizer
+from .deddqn_optimizer import DEDDQN_Optimizer
 from .dedqn_optimizer import DEDQN_Optimizer
 from .rl_hpsde_optimizer import RL_HPSDE_Optimizer
 from .lde_optimizer import LDE_Optimizer

@@ -33,7 +33,7 @@ from agent import (
     # Symbol_Agent,
 )
 from optimizer import (
-    DE_DDQN_Optimizer,
+    DEDDQN_Optimizer,
     DEDQN_Optimizer,
     RL_HPSDE_Optimizer,
     LDE_Optimizer,

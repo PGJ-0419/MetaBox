@@ -26,12 +26,12 @@ from .random_search import Random_search
 from .bayesian import BayesianOptimizer
 from .l2l_optimizer import L2L_Optimizer
 from .gleet_optimizer import GLEET_Optimizer
-from .rl_das_optimizer import RL_DAS_Optimizer
+from .rldas_optimizer import RLDAS_Optimizer
 from .les_optimizer import LES_Optimizer
 from .symbol_optimizer import SYMBOL_Optimizer
 
 from .nrlpso_optimizer import NRLPSO_Optimizer
-from .rlde_afl_optimizer import RLDE_AFL_Optimizer
+from .rldeafl_optimizer import RLDEAFL_Optimizer
 
 from .surr_rlde_optimizer import Surr_RLDE_Optimizer
 from .rlemmo_optimizer import RLEMMO_Optimizer

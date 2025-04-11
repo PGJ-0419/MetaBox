@@ -356,7 +356,7 @@ class Critic(nn.Module):
         trainable_num = sum(p.numel() for p in self.parameters() if p.requires_grad)  # Number of trainable parameters
         return {'Total': total_num, 'Trainable': trainable_num}
 
-class RLDE_AFL_Agent(PPO_Agent):
+class RLDEAFL(PPO_Agent):
     def __init__(self, config):
         self.config = config
 
@@ -395,7 +395,7 @@ class RLDE_AFL_Agent(PPO_Agent):
         super().__init__(self.config, {'actor': actor, 'critic': critic, 'fe': fe}, self.config.lr)
 
     def __str__(self):
-        return "RLDE_AFL"
+        return "RLDEAFL"
 
     def train_episode(self,
                       envs,

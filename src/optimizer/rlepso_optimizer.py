@@ -34,8 +34,9 @@ class RLEPSO_Optimizer(Learnable_Optimizer):
         self.log_interval = config.log_interval
         self.__max_fes = config.maxFEs
         self.__is_done = False
-        self.name = 'EPSO'
 
+    def __str__(self):
+        return "RLEPSO_Optimizer"
 
     def init_population(self, problem):
         rand_pos=self.rng.uniform(low=problem.lb, high=problem.ub, size=(self.__NP, self.__dim))
@@ -63,6 +64,11 @@ class RLEPSO_Optimizer(Learnable_Optimizer):
         self.log_index = 1
         self.cost = [self.__particles['gbest_val']]
         self.__per_no_improve -= self.__per_no_improve
+
+        if self.__config.full_meta_data:
+            self.meta_X = [self.__particles['current_position']]
+            self.meta_Cost = [self.__particles['c_cost']]
+
         return self.__get_state()
     
     # calculate costs of solutions
@@ -241,6 +247,11 @@ class RLEPSO_Optimizer(Learnable_Optimizer):
         if self.fes >= self.log_index * self.log_interval:
             self.log_index += 1
             self.cost.append(self.__particles['gbest_val'])
+
+        if self.__config.full_meta_data:
+            self.meta_X.append(self.__particles['current_position'])
+            self.meta_Cost.append(self.__particles['c_cost'])
+
 
         if problem.optimum is None:
             is_end = self.fes >= self.__max_fes

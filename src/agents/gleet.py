@@ -170,7 +170,7 @@ class Critic(nn.Module):
         return baseline_value.squeeze()
 
 
-class GLEET_Agent(PPO_Agent):
+class GLEET(PPO_Agent):
     def __init__(self, config):
         self.config = config
 

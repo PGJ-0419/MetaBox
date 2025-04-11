@@ -62,7 +62,7 @@ class Critic(nn.Module):
         return baseline_value.detach().squeeze(), baseline_value.squeeze()
 
 
-class RLEPSO_Agent(PPO_Agent):
+class RLEPSO(PPO_Agent):
     def __init__(self, config):
 
         self.config = config
@@ -88,33 +88,10 @@ class RLEPSO_Agent(PPO_Agent):
         # figure out the critic
         critic = Critic(config)
 
-        # figure out the optimizer
-        # self.__optimizer_actor = torch.optim.Adam(
-        #     [{'params': self.__actor.parameters(), 'lr': config.lr}])
-        # self.__optimizer_critic = torch.optim.Adam(
-        #     [{'params': self.__critic.parameters(), 'lr': config.lr}])
-
-        # init learning time
-        # self.__learning_time=0
-        #
-        # self.__cur_checkpoint=0
-
-        # save init agent
-        # if self.__cur_checkpoint==0:
-        #     save_class(self.__config.agent_save_dir,'checkpoint'+str(self.__cur_checkpoint),self)
-        #     self.__cur_checkpoint+=1
-
         super().__init__(self.config, {'actor': actor, 'critic': critic}, self.config.lr)
 
     def __str__(self):
         return "RLEPSO"
-    # def update_setting(self, config):
-    #     self.__config.max_learning_step = config.max_learning_step
-    #     self.__config.agent_save_dir = config.agent_save_dir
-    #     self.__learning_time = 0
-    #     save_class(self.__config.agent_save_dir, 'checkpoint0', self)
-    #     self.__config.save_interval = config.save_interval
-    #     self.__cur_checkpoint = 1
 
     def train_episode(self,
                       envs,
@@ -326,7 +303,6 @@ class RLEPSO_Agent(PPO_Agent):
         env.close()
         return is_train_ended, return_info
 
-
     def rollout_batch_episode(self,
                               envs,
                               seeds = None,
@@ -373,194 +349,36 @@ class RLEPSO_Agent(PPO_Agent):
         for key in required_info.keys():
             results[key] = env.get_env_attr(required_info[key])
         return results
-    # def train_episode(self, env):
-    #     config = self.__config
-    #     # setup
-    #     memory = Memory()
-    #     # initial instances and solutions
-    #     state = env.reset()
-    #     state = torch.FloatTensor(state).to(self.__device)
-    #
-    #
-    #     # params for training
-    #     gamma = config.gamma
-    #     n_step = config.n_step
-    #     K_epochs = config.K_epochs
-    #     eps_clip = config.eps_clip
-    #
-    #     t = 0
-    #     _R = 0
-    #     # initial_cost = obj
-    #     is_done = False
-    #     # sample trajectory
-    #     while not is_done:
-    #         t_s = t
-    #         total_cost = 0
-    #         entropy = []
-    #         bl_val_detached = []
-    #         bl_val = []
-    #
-    #         while t - t_s < n_step:
-    #             # encoding the state
-    #
-    #             memory.states.append(state.clone())
-    #
-    #             # get model output
-    #             action, log_lh,  entro_p = self.__actor(state,
-    #                                                     require_entropy=True,
-    #                                                     )
-    #             action = action.reshape(config.action_shape)
-    #             memory.actions.append(action.clone().detach())
-    #             action = action.cpu().numpy()
-    #             memory.logprobs.append(log_lh)
-    #
-    #             entropy.append(entro_p.detach().cpu())
-    #
-    #             baseline_val_detached, baseline_val = self.__critic(state)
-    #             bl_val_detached.append(baseline_val_detached)
-    #             bl_val.append(baseline_val)
-    #
-    #             # state transient
-    #             next_state,rewards,is_done = env.step(action)
-    #             _R += rewards
-    #             memory.rewards.append(torch.FloatTensor([rewards]).to(config.device))
-    #             # print('step:{},max_reward:{}'.format(t,torch.max(rewards)))
-    #
-    #             # store info
-    #             # total_cost = total_cost + gbest_val
-    #
-    #             # next
-    #             t = t + 1
-    #             state=next_state
-    #             state=torch.FloatTensor(state).to(config.device)
-    #             if is_done:
-    #
-    #                 break
-    #
-    #         # store info
-    #         t_time = t - t_s
-    #         total_cost = total_cost / t_time
-    #
-    #         # begin update        =======================
-    #
-    #         # bs, ps, dim_f = state.size()
-    #
-    #         old_actions = torch.stack(memory.actions)
-    #         old_states = torch.stack(memory.states).detach()
-    #
-    #         old_logprobs = torch.stack(memory.logprobs).detach().view(-1)
-    #
-    #         # Optimize PPO policy for K mini-epochs:
-    #         old_value = None
-    #         for _k in range(K_epochs):
-    #             if _k == 0:
-    #                 logprobs = memory.logprobs
-    #
-    #             else:
-    #                 # Evaluating old actions and values :
-    #                 logprobs = []
-    #                 entropy = []
-    #                 bl_val_detached = []
-    #                 bl_val = []
-    #
-    #                 for tt in range(t_time):
-    #
-    #                     # get new action_prob
-    #                     _, log_p,  entro_p = self.__actor(old_states[tt],
-    #                                                       fixed_action=old_actions[tt],
-    #                                                       require_entropy=True,  # take same action
-    #                                                       )
-    #
-    #                     logprobs.append(log_p)
-    #                     entropy.append(entro_p.detach().cpu())
-    #
-    #                     baseline_val_detached, baseline_val = self.__critic(old_states[tt])
-    #
-    #                     bl_val_detached.append(baseline_val_detached)
-    #                     bl_val.append(baseline_val)
-    #
-    #             logprobs = torch.stack(logprobs).view(-1)
-    #             entropy = torch.stack(entropy).view(-1)
-    #             bl_val_detached = torch.stack(bl_val_detached).view(-1)
-    #             bl_val = torch.stack(bl_val).view(-1)
-    #
-    #             # get target value for critic
-    #             Reward = []
-    #             reward_reversed = memory.rewards[::-1]
-    #             # get next value
-    #             R = self.__critic(state)[0]
-    #
-    #             # R = agent.critic(state)[0]
-    #             critic_output = R.clone()
-    #             for r in range(len(reward_reversed)):
-    #                 R = R * gamma + reward_reversed[r]
-    #                 Reward.append(R)
-    #             # clip the target:
-    #             Reward = torch.stack(Reward[::-1], 0)
-    #             Reward = Reward.view(-1)
-    #
-    #             # Finding the ratio (pi_theta / pi_theta__old):
-    #             ratios = torch.exp(logprobs - old_logprobs.detach())
-    #
-    #             # Finding Surrogate Loss:
-    #             advantages = Reward - bl_val_detached
-    #
-    #             surr1 = ratios * advantages
-    #             surr2 = torch.clamp(ratios, 1-eps_clip, 1+eps_clip) * advantages
-    #             reinforce_loss = -torch.min(surr1, surr2).mean()
-    #
-    #             # define baseline loss
-    #             if old_value is None:
-    #                 baseline_loss = ((bl_val - Reward) ** 2).mean()
-    #                 old_value = bl_val.detach()
-    #             else:
-    #                 vpredclipped = old_value + torch.clamp(bl_val - old_value, - eps_clip, eps_clip)
-    #                 v_max = torch.max(((bl_val - Reward) ** 2), ((vpredclipped - Reward) ** 2))
-    #                 baseline_loss = v_max.mean()
-    #
-    #             # check K-L divergence (for logging only)
-    #             approx_kl_divergence = (.5 * (old_logprobs.detach() - logprobs) ** 2).mean().detach()
-    #             approx_kl_divergence[torch.isinf(approx_kl_divergence)] = 0
-    #             # calculate loss
-    #             loss = baseline_loss + reinforce_loss
-    #
-    #             # update gradient step
-    #             # agent.optimizer.zero_grad()
-    #             self.__optimizer_actor.zero_grad()
-    #             self.__optimizer_critic.zero_grad()
-    #             baseline_loss.backward()
-    #             reinforce_loss.backward()
-    #             # loss.backward()
-    #
-    #
-    #             # perform gradient descent
-    #             self.__optimizer_actor.step()
-    #             self.__optimizer_critic.step()
-    #             self.__learning_time += 1
-    #
-    #             if self.__learning_time >= (self.__config.save_interval * self.__cur_checkpoint):
-    #                 save_class(self.__config.agent_save_dir, 'checkpoint'+str(self.__cur_checkpoint), self)
-    #                 self.__cur_checkpoint += 1
-    #
-    #             if self.__learning_time >= config.max_learning_step:
-    #                 return self.__learning_time >= config.max_learning_step, {'normalizer': env.optimizer.cost[0],
-    #                                                                           'gbest': env.optimizer.cost[-1],
-    #                                                                           'return': _R,
-    #                                                                           'learn_steps': self.__learning_time}
-    #
-    #         memory.clear_memory()
-    #     return self.__learning_time >= config.max_learning_step, {'normalizer': env.optimizer.cost[0],
-    #                                                               'gbest': env.optimizer.cost[-1],
-    #                                                               'return': _R,
-    #                                                               'learn_steps': self.__learning_time}
-    #
-    # def rollout_episode(self, env):
-    #     is_done = False
-    #     state = env.reset()
-    #     R = 0
-    #     while not is_done:
-    #         state = torch.FloatTensor(state).to(self.__config.device)
-    #         action = self.__actor(state)[0].cpu().numpy()
-    #         state, reward, is_done = env.step(action)
-    #         R += reward
-    #     return {'cost': env.optimizer.cost, 'fes': env.optimizer.fes, 'return': R}
+
+    def rollout_episode(self,
+                        env,
+                        seed = None,
+                        required_info = {}):
+        with torch.no_grad():
+            if seed is not None:
+                env.seed(seed)
+            is_done = False
+            state = env.reset()
+            R = 0
+            while not is_done:
+                try:
+                    state = torch.FloatTensor(state).to(self.device)
+                except:
+                    state = [state]
+                action = self.actor(state)[0]
+                action = action.detach().cpu().numpy()
+                state, reward, is_done, info = env.step(action)
+                R += reward
+            env_cost = env.get_env_attr('cost')
+            env_fes = env.get_env_attr('fes')
+            results = {'cost': env_cost, 'fes': env_fes, 'return': R}
+
+            if self.config.full_meta_data:
+                meta_X = env.get_env_attr('meta_X')
+                meta_Cost = env.get_env_attr('meta_Cost')
+                metadata = {'X': meta_X, 'Cost': meta_Cost}
+                results['metadata'] = metadata
+
+            for key in required_info.keys():
+                results[key] = getattr(env, required_info[key])
+            return results

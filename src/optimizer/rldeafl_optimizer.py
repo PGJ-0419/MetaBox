@@ -39,9 +39,9 @@ class select_crossover:
         operator_class = self.operators[crossover_operator_name]
         return operator_class
 
-class RLDE_AFL_Optimizer(Learnable_Optimizer):
+class RLDEAFL_Optimizer(Learnable_Optimizer):
     def __init__(self, config):
-        super(RLDE_AFL_Optimizer, self).__init__(config)
+        super().__init__(config)
         self.__config = config
 
         self.__mu_operator = 14
@@ -62,6 +62,9 @@ class RLDE_AFL_Optimizer(Learnable_Optimizer):
         self.log_index = None
         self.log_interval = config.log_interval
 
+    def __str__(self):
+        return "RLDEAFL_Optimizer"
+
     # calculate costs of solutions
     def get_costs(self, position, problem):
         ps = position.shape[0]
@@ -80,9 +83,6 @@ class RLDE_AFL_Optimizer(Learnable_Optimizer):
         xs = (self.current_vector - 0) / (1 - 0)
         fes = self.fes / self.max_fes
         pop = np.column_stack((xs, self.current_fitness, np.full(xs.shape[0], fes)))
-        # pop = {'x': xs[None, :],
-        #        'y': self.current_fitness[None, :],
-        #        'fes': np.array([[fes]])}
         return pop
 
     def init_population(self, problem):
@@ -103,6 +103,10 @@ class RLDE_AFL_Optimizer(Learnable_Optimizer):
         self.log_index = 1
         self.cost = [self.gbest_val]
         self.__init_gbest = self.gbest_val
+
+        if self.__config.full_meta_data:
+            self.meta_X = [self.current_vector]
+            self.meta_Cost = [self.current_fitness]
 
         return self.observe()
 
@@ -178,6 +182,10 @@ class RLDE_AFL_Optimizer(Learnable_Optimizer):
         if self.fes >= self.log_index * self.log_interval:
             self.log_index += 1
             self.cost.append(self.gbest_val)
+
+        if self.__config.full_meta_data:
+            self.meta_X.append(self.current_vector)
+            self.meta_Cost.append(self.current_fitness)
 
         if problem.optimum is None:
             is_done = self.fes >= self.max_fes

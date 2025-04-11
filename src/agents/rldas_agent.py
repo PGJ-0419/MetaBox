@@ -90,7 +90,7 @@ class Critic(nn.Module):
         bl_val = self.model(feature.view(batch, -1))[:, 0]
         return bl_val.detach(), bl_val
 
-class RL_DAS_Agent(PPO_Agent):
+class RLDAS(PPO_Agent):
     def __init__(self, config):
         self.config = config
 
@@ -120,7 +120,7 @@ class RL_DAS_Agent(PPO_Agent):
         super().__init__(self.config, {'actor': actor, 'critic': critic}, self.config.lr)
 
     def __str__(self):
-        return "RL_DAS"
+        return "RLDAS"
 
     def train_episode(self,
                       envs,
@@ -399,6 +399,13 @@ class RL_DAS_Agent(PPO_Agent):
             env_cost = env.get_env_attr('cost')
             env_fes = env.get_env_attr('fes')
             results = {'cost': env_cost, 'fes': env_fes, 'return': R}
+
+            if self.config.full_meta_data:
+                meta_X = env.get_env_attr('meta_X')
+                meta_Cost = env.get_env_attr('meta_Cost')
+                metadata = {'X': meta_X, 'Cost': meta_Cost}
+                results['metadata'] = metadata
+
             for key in required_info.keys():
                 results[key] = getattr(env, required_info[key])
             return results

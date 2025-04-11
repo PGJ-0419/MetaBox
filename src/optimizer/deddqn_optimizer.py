@@ -43,6 +43,9 @@ class DEDDQN_Optimizer(Learnable_Optimizer):
         self.log_index = None
         self.log_interval = config.log_interval
 
+    def __str__(self):
+        return "DEDDQN_Optimizer"
+
     def init_population(self, problem):
         # population initialization
         self.__X = self.rng.rand(self.__NP, self.__dim) * (problem.ub - problem.lb) + problem.lb
@@ -72,7 +75,7 @@ class DEDDQN_Optimizer(Learnable_Optimizer):
         self.log_index = 1
         self.cost = [self.__c_gbest]
 
-        if self.__config.full_metadata:
+        if self.__config.full_meta_data:
             self.meta_X = [self.__X.copy()]
             self.meta_Cost = [self.__cost.copy()]
 
@@ -218,7 +221,7 @@ class DEDDQN_Optimizer(Learnable_Optimizer):
         # get next state
         next_state = self.__get_state(problem)
 
-        if self.__config.full_metadata:
+        if self.__config.full_meta_data:
             self.meta_X.append(self.__X)
             self.meta_Cost.append(self.__cost)
 

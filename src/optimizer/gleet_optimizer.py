@@ -32,7 +32,9 @@ class GLEET_Optimizer(Learnable_Optimizer):
         self.cost = None
         self.log_index = None
         self.log_interval = config.log_interval
-        
+
+    def __str__(self):
+        return "GLEET_Optimizer"
     # initialize GPSO environment
     def initialize_particles(self, problem):
         # randomly generate the position and velocity
@@ -109,7 +111,7 @@ class GLEET_Optimizer(Learnable_Optimizer):
         # get and return the total state (population state, exploration state, exploitation state)
         gp_cat=self.gp_cat()  # ps, 18
 
-        if self.__config.full_metadata:
+        if self.__config.full_meta_data:
             self.meta_X = [self.particles['current_position']]
             self.meta_Cost = [self.particles['c_cost']]
 
@@ -273,7 +275,7 @@ class GLEET_Optimizer(Learnable_Optimizer):
         # update the population
         self.particles=new_particles
 
-        if self.__config.full_metadata:
+        if self.__config.full_meta_data:
             self.meta_X.append(self.particles['current_position'])
             self.meta_Cost.append(self.particles['c_cost'])
 

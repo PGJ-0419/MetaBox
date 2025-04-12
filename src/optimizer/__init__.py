@@ -35,3 +35,5 @@ from .rldeafl_optimizer import RLDEAFL_Optimizer
 
 from .surr_rlde_optimizer import Surr_RLDE_Optimizer
 from .rlemmo_optimizer import RLEMMO_Optimizer
+
+from .glhf_optimizer import GLHF_Optimizer

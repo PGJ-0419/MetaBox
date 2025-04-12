@@ -42,11 +42,11 @@ from optimizer import (
     RL_PSO_Optimizer,
     L2L_Optimizer,
     GLEET_Optimizer,
-    RL_DAS_Optimizer,
+    RLDAS_Optimizer,
     LES_Optimizer,
     NRLPSO_Optimizer,
     SYMBOL_Optimizer,
-    RLDE_AFL_Optimizer,
+    RLDEAFL_Optimizer,
     Surr_RLDE_Optimizer,
     RLEMMO_Optimizer,
 
@@ -66,33 +66,21 @@ from optimizer import (
 )
 
 from agents import (
-    GLEET_Agent,
-    DE_DDQN_Agent,
+    GLEET,
+    DEDDQN,
     DEDQN_Agent,
     QLPSO_Agent,
     NRLPSO_Agent,
     RL_HPSDE_Agent,
-    RLDE_AFL_Agent,
-    SYMBOL_Agent,
-    RL_DAS_Agent,
+    RLDEAFL,
+    SYMBOL,
+    RLDAS,
     Surr_RLDE_Agent,
     RLEMMO_Agent
 )
 
 from VectorEnv.great_para_env import ParallelEnv
 
-from agents import (
-    GLEET_Agent,
-    DE_DDQN_Agent,
-    DEDQN_Agent,
-    QLPSO_Agent,
-    NRLPSO_Agent,
-    RL_HPSDE_Agent,
-    RLDE_AFL_Agent,
-    SYMBOL_Agent,
-    RL_DAS_Agent,
-    Surr_RLDE_Agent
-)
 
 def cal_t0(dim, fes):
     T0 = 0

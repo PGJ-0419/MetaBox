@@ -12,4 +12,5 @@ from .rldas_agent import RLDAS
 from .surr_rlde_agent import Surr_RLDE_Agent
 from .rlepso_agent import RLEPSO
 from .rlemmo_agent import RLEMMO_Agent
-from .L2O_agent import L2O_Agent
+from .l2o_agent import L2O_Agent
+from .glhf import GLHF

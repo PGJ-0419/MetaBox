@@ -31,7 +31,7 @@ from agent import (
     # Symbol_Agent,
 )
 from optimizer import (
-    DE_DDQN_Optimizer,
+    DEDDQN_Optimizer,
     DEDQN_Optimizer,
     RL_HPSDE_Optimizer,
     LDE_Optimizer,
@@ -40,13 +40,14 @@ from optimizer import (
     RL_PSO_Optimizer,
     L2L_Optimizer,
     GLEET_Optimizer,
-    RL_DAS_Optimizer,
+    RLDAS_Optimizer,
     LES_Optimizer,
     NRLPSO_Optimizer,
     SYMBOL_Optimizer,
-    RLDE_AFL_Optimizer,
+    RLDEAFL_Optimizer,
     Surr_RLDE_Optimizer,
     RLEMMO_Optimizer,
+    GLHF_Optimizer,
 
     DEAP_DE,
     JDE21,
@@ -63,21 +64,22 @@ from optimizer import (
 )
 
 from agents import (
-    GLEET_Agent,
-    DE_DDQN_Agent,
+    GLEET,
+    DEDDQN,
     DEDQN_Agent,
     QLPSO_Agent,
     NRLPSO_Agent,
     RL_HPSDE_Agent,
-    RLEPSO_Agent,
-    RLDE_AFL_Agent,
+    RLEPSO,
+    RLDEAFL,
     LDE_Agent,
     RL_PSO_Agent,
-    SYMBOL_Agent,
-    RL_DAS_Agent,
-    SYMBOL_Agent,
+    SYMBOL,
+    RLDAS,
+    SYMBOL,
     Surr_RLDE_Agent,
     RLEMMO_Agent,
+    GLHF,
 )
 
 
@@ -296,18 +298,15 @@ class Trainer(object):
                                                                               seeds = seed_list,
                                                                               tb_logger = tb_logger,
                                                                               para_mode = "dummy",
-                                                                              asynchronous = None,
-                                                                              num_cpus = 1,
-                                                                              num_gpus = 0,
                                                                               )
                     # exceed_max_ls, pbar_info_train = self.agent.train_episode(env)  # pbar_info -> dict
-                    postfix_str = (
-                        f"loss={train_meta_data['loss']:.2e}, "
-                        f"learn_steps={train_meta_data['learn_steps']}, "
-                        f"return={[f'{x:.2e}' for x in train_meta_data['return']]}"
-                    )
-
-                    pbar.set_postfix_str(postfix_str)
+                    # postfix_str = (
+                    #     f"loss={train_meta_data['loss']:.2e}, "
+                    #     f"learn_steps={train_meta_data['learn_steps']}, "
+                    #     f"return={[f'{x:.2e}' for x in train_meta_data['return']]}"
+                    # )
+                    #
+                    # pbar.set_postfix_str(postfix_str)
                     pbar.update(self.train_set.batch_size)
                     learn_step = train_meta_data['learn_steps']
                     # for id, p in enumerate(problem):

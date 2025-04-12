@@ -1,6 +1,7 @@
 from .bbob import *
 from torch.utils.data import Dataset
 from .utils import *
+import numpy as np
 
 class BBOB_Dataset_torch(Dataset):
     def __init__(self,

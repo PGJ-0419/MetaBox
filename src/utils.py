@@ -30,7 +30,7 @@ def construct_problem_set(config):
                                               test_batch_size=config.test_batch_size,
                                               difficulty=config.difficulty)
     elif problem in ['bbob-torch', 'bbob-noisy-torch']:
-        return bbob_torch.bbob_dataset.BBOB_Dataset_torch.get_datasets(suit=config.problem,
+        return bbob_torch.BBOB_Dataset_torch.get_datasets(suit=config.problem,
                                                           dim=config.dim,
                                                           upperbound=config.upperbound,
                                                           train_batch_size=config.train_batch_size,

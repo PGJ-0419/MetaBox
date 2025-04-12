@@ -2,7 +2,7 @@ from typing import Any, Callable, List, Optional, Tuple, Union
 
 import gym, platform, os
 import numpy as np
-
+import torch
 from VectorEnv.worker import (
     DummyEnvWorker,
     EnvWorker,
@@ -207,10 +207,16 @@ class BaseVectorEnv(gym.Env):
                 if len(ids[i]) > 0:
                     obs = list(self.workers[i].recv())
                     obs_list += obs
-        try:
-            obs = np.stack(obs_list)
-        except ValueError:  # different len(obs)
-            obs = np.array(obs_list, dtype=object)
+        if isinstance(obs_list[0], torch.Tensor):
+            try:
+                obs = torch.stack(obs_list)
+            except RuntimeError:
+                obs = obs_list
+        else:
+            try:
+                obs = np.stack(obs_list)
+            except ValueError:  # different len(obs)
+                obs = np.array(obs_list, dtype=object)
         return self.normalize_obs(obs)
 
     def step(
@@ -303,10 +309,16 @@ class BaseVectorEnv(gym.Env):
                 self.ready_id.append(env_id)
         if not (not self.is_async and self.worker_name == 'RaySubprocEnvWorker'):
             obs_list, rew_list, done_list, info_list = zip(*result)
-        try:
-            obs_stack = np.stack(obs_list)
-        except ValueError:  # different len(obs)
-            obs_stack = np.array(obs_list, dtype=object)
+        if isinstance(obs_list[0], torch.Tensor):
+            try:
+                obs_stack = torch.stack(obs_list)
+            except RuntimeError:
+                obs_stack = obs_list
+        else:
+            try:
+                obs_stack = np.stack(obs_list)
+            except ValueError:  # different len(obs)
+                obs_stack = np.array(obs_list, dtype=object)
         rew_stack, done_stack, info_stack = map(
             np.stack, [rew_list, done_list, info_list]
         )

@@ -166,11 +166,11 @@ class BBO_TestUnit():
         torch.set_default_dtype(torch.float64)
         self.optimizer.seed(self.seed)
         self.problem.reset()
-        start_time = time.time()
+        start_time = time.perf_counter()
         res = self.optimizer.run_episode(self.problem)
-        end_time = time.time()
+        end_time = time.perf_counter()
         res['T1'] = self.problem.T1
-        res['T2'] = end_time - start_time
+        res['T2'] = (end_time - start_time) * 1000
         res['agent_name'] = self.optimizer.__str__()
         res['problem_name'] = self.problem.__str__()
         return res
@@ -201,11 +201,11 @@ class MetaBBO_TestUnit():
 
         torch.set_default_dtype(torch.float64)
 
-        start_time = time.time()
+        start_time = time.perf_counter()
         res = self.agent.rollout_episode(self.env, self.seed, required_info)
-        end_time = time.time()
+        end_time = time.perf_counter()
         res['T1'] = self.env.problem.T1
-        res['T2'] = end_time - start_time
+        res['T2'] = (end_time - start_time) * 1000
         agent_name = self.agent.__str__()
         if self.checkpoint is not None:
             agent_name += f'-{self.checkpoint}'

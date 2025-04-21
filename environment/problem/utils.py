@@ -98,6 +98,7 @@ def get_problem_set(config, problem, difficulty, train_list, test_list):
                                          difficulty = difficulty,
                                          user_train_list = train_list,
                                          user_test_list = test_list,
+                                         datapath = config.hpob_path
                                          )
     elif problem in ['ne']:
         from environment.problem.SOO.NE.ne_dataset import NE_Dataset

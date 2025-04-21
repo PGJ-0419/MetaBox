@@ -32,27 +32,27 @@ class HPOB_Dataset(Dataset):
                      cost_normalize=False,):
         # get functions ID of indicated suit
         if datapath is None:
-            datapath = 'environment/problem/SOO/HPO_B/datafiles/'
+            datapath = os.path.join(os.getcwd(), "metabox_data")
         root_dir = datapath+"HPO-B-main/hpob-data/"
         surrogates_dir = datapath+"HPO-B-main/saved-surrogates/"
         
-        if not os.path.exists(root_dir) or len(os.listdir(root_dir)) < 7 or not os.path.exists(surrogates_dir) or len(os.listdir(surrogates_dir)) < 1909:
-            try:
-                from huggingface_hub import snapshot_download
-            except ImportError:
-                # check the required package, if not exists, pip install it
-                try:
-                    subprocess.check_call([sys.executable,'-m', "pip", "install", 'huggingface_hub'])
-                    # print("huggingface_hub has been installed successfully!")
-                    from huggingface_hub import snapshot_download
-                except subprocess.CalledProcessError as e:
-                    print(f"Install huggingface_hub leads to errors: {e}")
+        # if not os.path.exists(root_dir) or len(os.listdir(root_dir)) < 7 or not os.path.exists(surrogates_dir) or len(os.listdir(surrogates_dir)) < 1909:
+        #     try:
+        #         from huggingface_hub import snapshot_download
+        #     except ImportError:
+        #         # check the required package, if not exists, pip install it
+        #         try:
+        #             subprocess.check_call([sys.executable,'-m', "pip", "install", 'huggingface_hub'])
+        #             # print("huggingface_hub has been installed successfully!")
+        #             from huggingface_hub import snapshot_download
+        #         except subprocess.CalledProcessError as e:
+        #             print(f"Install huggingface_hub leads to errors: {e}")
                     
-            snapshot_download(repo_id='GMC-DRL/MetaBox-HPO-B', repo_type="dataset", local_dir=datapath)
-            print("Extract data...")
-            os.system(f'tar -xf {datapath}HPO-B-main.tar.gz -C {datapath}')
-            os.system(f'rm {datapath}HPO-B-main.tar.gz')
-            os.system(f'rm {datapath}.gitattributes')
+        #     snapshot_download(repo_id='GMC-DRL/MetaBox-HPO-B', repo_type="dataset", local_dir=datapath)
+        #     print("Extract data...")
+        #     os.system(f'tar -xf {datapath}HPO-B-main.tar.gz -C {datapath}')
+        #     os.system(f'rm {datapath}HPO-B-main.tar.gz')
+        #     os.system(f'rm {datapath}.gitattributes')
             
         meta_train_data,meta_vali_data,meta_test_data,bo_initializations,surrogates_stats=get_data(root_dir=root_dir, mode="v3", surrogates_dir=surrogates_dir)
         

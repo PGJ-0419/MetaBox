@@ -4,20 +4,20 @@ from ...rl.dqn import *
 
 class PSORLNS(DQN_Agent):
     def __init__(self, config):
-        
+
         self.config = config
         self.config.state_size = 1
         self.config.n_act = 5
-        self.config.mlp_config = [{'in': config.state_size, 'out': 10, 'drop_out': 0, 'activation': 'ReLU'},
-                             {'in': 10, 'out': 10, 'drop_out': 0, 'activation': 'ReLU'},
-                             {'in': 10, 'out': config.n_act, 'drop_out': 0, 'activation': 'None'}]
+        self.config.mlp_config = [{'in': self.config.state_size, 'out': 10, 'drop_out': 0, 'activation': 'ReLU'},
+                                  {'in': 10, 'out': 10, 'drop_out': 0, 'activation': 'ReLU'},
+                                  {'in': 10, 'out': config.n_act, 'drop_out': 0, 'activation': 'None'}]
         self.config.lr_model = 1e-4
 
         self.config.lr_decay = 1
         self.config.epsilon = 0.1
         self.config.gamma = 0.8
-        self.config.memory_size = 100
-        self.config.batch_size = 64
+        self.config.memory_size = 1000  # todo
+        self.config.batch_size = 256  # todo
         self.config.warm_up_size = config.batch_size
 
         self.config.device = config.device
@@ -35,10 +35,10 @@ class PSORLNS(DQN_Agent):
     def __str__(self):
         return "PSORLNS"
 
-    def train_episode(self, 
+    def train_episode(self,
                       envs,
                       seeds: Optional[Union[int, List[int], np.ndarray]],
-                      para_mode: Literal['dummy', 'subproc', 'ray', 'ray-subproc']='dummy',
+                      para_mode: Literal['dummy', 'subproc', 'ray', 'ray-subproc'] = 'dummy',
                       # todo: asynchronous: Literal[None, 'idle', 'restart', 'continue'] = None,
                       # num_cpus: Optional[Union[int, None]] = 1,
                       # num_gpus: int = 0,
@@ -51,35 +51,36 @@ class PSORLNS(DQN_Agent):
             num_cpus = compute_resource['num_cpus']
         if 'num_gpus' in compute_resource.keys():
             num_gpus = compute_resource['num_gpus']
-        env = ParallelEnv(envs, para_mode, num_cpus=num_cpus, num_gpus=num_gpus)
+        env = ParallelEnv(envs, para_mode, num_cpus = num_cpus, num_gpus = num_gpus)
         env.seed(seeds)
-        self.ps = env.get_env_attr('ps')
+        self.ps = int(env.get_env_attr('ps')[0])
         # params for training
         gamma = self.gamma
-        
+
         state = env.reset()
         try:
-            state = torch.Tensor(state).reshape(-1, self.state_size)
+            state = torch.Tensor(state).reshape(len(env) * self.ps, self.config.state_size).to(self.device)
         except:
             pass
-        
+
         _R = torch.zeros(len(env) * self.ps)
         _loss = []
         _reward = []
         # sample trajectory
         while not env.all_done():
-            action = self.get_action(state=state, epsilon_greedy=True)
-                        
+            assert state.shape == (len(env) * self.ps, self.config.state_size)
+            action = self.get_action(state = state, epsilon_greedy = True)
+
             # state transient
             next_state, reward, is_end, info = env.step(action.reshape(len(env), self.ps))
-            reward = reward.reshape(len(env) * self.ps)
-            is_end = is_end.reshape(len(env)*self.ps)
+            reward = reward.reshape(len(env) * self.ps, )
+            is_end = is_end.reshape(len(env) * self.ps, )
             _R += reward
             _reward.append(torch.Tensor(reward))
             # store info
             # convert next_state into tensor
             try:
-                next_state = torch.Tensor(next_state).to(self.device).reshape(-1, self.state_size)
+                next_state = torch.Tensor(next_state).reshape(len(env) * self.ps, self.config.state_size).to(self.device)
             except:
                 pass
             for s, a, r, ns, d in zip(state, action, reward, next_state, is_end):
@@ -88,21 +89,21 @@ class PSORLNS(DQN_Agent):
                 state = torch.Tensor(next_state).to(self.device)
             except:
                 state = copy.deepcopy(next_state)
-            
+
             # begin update
             if len(self.replay_buffer) >= self.warm_up_size:
                 batch_obs, batch_action, batch_reward, batch_next_obs, batch_done = self.replay_buffer.sample(self.batch_size)
                 pred_Vs = self.model(batch_obs.to(self.device))  # [batch_size, n_act]
                 action_onehot = torch.nn.functional.one_hot(batch_action.to(self.device), self.n_act)  # [batch_size, n_act]
 
-                _avg_predict_Q = (pred_Vs * action_onehot).mean(0) # [n_act]
+                _avg_predict_Q = (pred_Vs * action_onehot).mean(0)  # [n_act]
                 predict_Q = (pred_Vs * action_onehot).sum(1)  # [batch_size]
 
                 target_output = self.model(batch_next_obs.to(self.device))
                 _avg_target_Q = batch_reward.to(self.device)[:, None] + (1 - batch_done.to(self.device))[:, None] * gamma * target_output
                 target_Q = batch_reward.to(self.device) + (1 - batch_done.to(self.device)) * gamma * target_output.max(1)[0]
-                _avg_target_Q = _avg_target_Q.mean(0) # [n_act]
-                
+                _avg_target_Q = _avg_target_Q.mean(0)  # [n_act]
+
                 self.optimizer.zero_grad()
                 loss = self.criterion(predict_Q, target_Q)
                 loss.backward()
@@ -132,7 +133,6 @@ class PSORLNS(DQN_Agent):
                         return_info[key] = env.get_env_attr(key)
                     env.close()
                     return self.learning_time >= self.config.max_learning_step, return_info
-        
 
         is_train_ended = self.learning_time >= self.config.max_learning_step
         _Rs = _R.detach().numpy().tolist()
@@ -143,13 +143,13 @@ class PSORLNS(DQN_Agent):
             return_info[key] = env.get_env_attr(key)
             # print(f"{key} : {return_info[key]}")
         env.close()
-        
+
         return is_train_ended, return_info
-    
-    def rollout_episode(self, 
+
+    def rollout_episode(self,
                         env,
-                        seed=None,
-                        required_info={}):
+                        seed = None,
+                        required_info = {}):
         self.ps = env.get_env_attr('ps')
         with torch.no_grad():
             if seed is not None:
@@ -159,21 +159,22 @@ class PSORLNS(DQN_Agent):
             R = np.zeros(self.ps)
             while not is_done[0]:
                 try:
-                    state = torch.Tensor(state).unsqueeze(0).to(self.device).reshape(-1, self.state_size)
+                    state = torch.Tensor(state).unsqueeze(0).to(self.device).reshape(self.ps, self.config.state_size)
                 except:
-                    st = state.reshape(-1, self.state_size)
+                    st = state.reshape(self.ps, self.config.state_size).to(self.device)
                 action = self.get_action(state)
-                action = action.cpu().numpy().squeeze()
-                state, reward, is_done = env.step(action.reshape(self.ps,))
-                reward = reward.reshape(self.ps)
-                is_done = is_done.reshape(self.ps)
+                action = action.squeeze()
+                state, reward, is_done, _ = env.step(action.reshape(self.ps, ))
+                reward = reward.reshape(self.ps, )
+                is_done = is_done.reshape(self.ps, )
                 R += reward
-            _Rs = np.mean(R).tolist()
+            # _Rs = np.mean(R).tolist()
+            _Rs = np.mean(R)
             env_cost = env.get_env_attr('cost')
             env_fes = env.get_env_attr('fes')
             env_pr = env.get_env_attr('pr')
             env_sr = env.get_env_attr('sr')
-            results = {'cost': env_cost, 'fes': env_fes, 'return': _Rs, 'pr': env_pr, 'sr':env_sr}
+            results = {'cost': env_cost, 'fes': env_fes, 'return': _Rs, 'pr': env_pr, 'sr': env_sr}
 
             if self.config.full_meta_data:
                 meta_X = env.get_env_attr('meta_X')
@@ -185,11 +186,11 @@ class PSORLNS(DQN_Agent):
             for key in required_info.keys():
                 results[key] = getattr(env, required_info[key])
             return results
-    
-    def rollout_batch_episode(self, 
-                              envs, 
-                              seeds=None,
-                              para_mode: Literal['dummy', 'subproc', 'ray', 'ray-subproc']='dummy',
+
+    def rollout_batch_episode(self,
+                              envs,
+                              seeds = None,
+                              para_mode: Literal['dummy', 'subproc', 'ray', 'ray-subproc'] = 'dummy',
                               # todo: asynchronous: Literal[None, 'idle', 'restart', 'continue'] = None,
                               # num_cpus: Optional[Union[int, None]] = 1,
                               # num_gpus: int = 0,
@@ -201,7 +202,7 @@ class PSORLNS(DQN_Agent):
             num_cpus = compute_resource['num_cpus']
         if 'num_gpus' in compute_resource.keys():
             num_gpus = compute_resource['num_gpus']
-        env = ParallelEnv(envs, para_mode, num_cpus=num_cpus, num_gpus=num_gpus)
+        env = ParallelEnv(envs, para_mode, num_cpus = num_cpus, num_gpus = num_gpus)
         env.seed(seeds)
         self.ps = env.get_env_attr('ps')
         state = env.reset()
@@ -209,17 +210,16 @@ class PSORLNS(DQN_Agent):
             state = torch.Tensor(state).to(self.device).reshape(-1, self.state_size)
         except:
             pass
-        
+
         R = torch.zeros(len(env) * self.ps)
         # sample trajectory
         while not env.all_done():
             with torch.no_grad():
                 action = self.get_action(state)
-            
 
             # state transient
             state, rewards, is_end, info = env.step(action.reshape(len(env), self.ps))
-            rewards = rewards.reshape(len(env)*self.ps)
+            rewards = rewards.reshape(len(env) * self.ps)
             # print('step:{},max_reward:{}'.format(t,torch.max(rewards)))
             R += torch.Tensor(rewards).squeeze()
             # store info
@@ -233,7 +233,7 @@ class PSORLNS(DQN_Agent):
         env_fes = env.get_env_attr('fes')
         env_pr = env.get_env_attr('pr')
         env_sr = env.get_env_attr('sr')
-        results = {'cost': env_cost, 'fes': env_fes, 'return': _Rs, 'pr': env_pr, 'sr':env_sr}
+        results = {'cost': env_cost, 'fes': env_fes, 'return': _Rs, 'pr': env_pr, 'sr': env_sr}
 
         if self.config.full_meta_data:
             meta_X = env.get_env_attr('meta_X')

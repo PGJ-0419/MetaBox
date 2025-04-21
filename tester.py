@@ -38,6 +38,7 @@ from .environment.optimizer import (
 
     GLHF_Optimizer,
     B2OPT_Optimizer,
+    PSORLNS_Optimizer,
 )
 
 from .baseline.bbo import (
@@ -67,7 +68,10 @@ from .baseline.metabbo import (
     SurrRLDE,
     RLEMMO,
     GLHF,
-    B2OPT
+    B2OPT,
+    LES,
+    PSORLNS,
+    LDE
 )
 
 def cal_t0(dim, fes):

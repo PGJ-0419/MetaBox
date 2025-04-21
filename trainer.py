@@ -37,7 +37,8 @@ from .environment.optimizer import (
     madac_optimizer,
     GLHF_Optimizer,
     B2OPT_Optimizer,
-    LGA_Optimizer
+    LGA_Optimizer,
+    PSORLNS_Optimizer,
 )
 
 from .baseline.bbo import (
@@ -72,7 +73,9 @@ from .baseline.metabbo import (
     LGA,
     LDE,
     RLEPSO,
-    RLPSO
+    RLPSO,
+    LES,
+    PSORLNS
 )
 
 

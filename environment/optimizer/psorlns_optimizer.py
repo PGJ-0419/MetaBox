@@ -3,6 +3,7 @@ import torch
 import numpy as np
 from scipy.spatial import distance
 
+
 class PSORLNS_Optimizer(Learnable_Optimizer):
     def __init__(self, config):
         super().__init__(config)
@@ -11,11 +12,10 @@ class PSORLNS_Optimizer(Learnable_Optimizer):
         self.w = 1
         self.c1 = 1.49445
         self.c2 = 1.49445
-        self.ps = 1000
-        self.eps =  0.1  # todo: 邻域个数判断阈值
-        self.TT2 = 0.8 # 选择worse better的随机数阈值
-        self.neighbor_num = [5,10,20,30,40]
-        
+        self.ps = 100
+
+        self.TT2 = 0.8  # 选择worse better的随机数阈值
+        self.neighbor_num = [5, 10, 20, 30, 40]
 
         self.fes = None
         self.cost = None
@@ -70,7 +70,7 @@ class PSORLNS_Optimizer(Learnable_Optimizer):
     # the interface for environment reseting
     def init_population(self, problem):
         self.max_fes = problem.maxfes
-        self.log_interval =(self.max_fes // self.__config.n_logpoint)
+        self.log_interval = (self.max_fes // self.__config.n_logpoint)
         self.dim = problem.dim
         self.fes = 0
         self.max_velocity = 0.1 * (problem.ub - problem.lb)
@@ -78,7 +78,7 @@ class PSORLNS_Optimizer(Learnable_Optimizer):
         self.w = 1
 
         self.max_dist = np.sqrt(np.sum((problem.ub - problem.lb) ** 2))
-
+        self.eps = 0.1 * self.max_dist  # todo: 邻域个数判断阈值
         # initialize the population
         self.initialize_particles(problem)
 
@@ -92,7 +92,6 @@ class PSORLNS_Optimizer(Learnable_Optimizer):
 
         # get the population state
         state = self.observe()  # ps, 9
-
 
         if self.__config.full_meta_data:
             self.meta_X = [self.particles['current_position'].copy()]
@@ -115,74 +114,74 @@ class PSORLNS_Optimizer(Learnable_Optimizer):
 
     # feature encoding
     def observe(self):
-        state = np.zeros(self.ps, 1)
+        state = np.zeros((self.ps, 1))
         pop_dist = self.particles['pop_dist'].copy()
         pop_dist[range(self.ps), range(self.ps)] = np.inf
         neighbor_matrix = np.zeros((self.ps, self.ps))
         neighbor_matrix[pop_dist < self.eps] = 1
-        sum_neighbors = np.sum(neighbor_matrix, axis = -1)
-        xtate = sum_neighbors / 100
-        
+        sum_neighbors = np.sum(neighbor_matrix, axis = -1, keepdims = True)
+        state = sum_neighbors / 100
+
         return state
 
     # direct reward function
     def cal_reward(self, current_cost, parent_cost):
         reward = np.zeros(self.ps)
-        reward[current_cost < parent_cost]  = 1
+        reward[current_cost < parent_cost] = 1
         reward[current_cost > parent_cost] = -1
-        
+
         return reward
 
     def update(self, action, problem):
-        is_end = False
+        is_end = [False] * self.ps
 
         # record the gbest_val in the begining
-        parent_cost = self.particles['c_cost']
-
+        parent_cost = self.particles['c_cost'].copy()
 
         # generate two set of random val for pso velocity update
-        new_position = np.zeros(self.ps, self.dim)
-        new_velocity = np.zeros(self.ps, self.dim)
-        
+        new_position = np.zeros((self.ps, self.dim))
+        new_velocity = np.zeros((self.ps, self.dim))
+
         pop_dist = self.particles['pop_dist'].copy()
         pop_dist[range(self.ps), range(self.ps)] = np.inf
         rank_dist = np.argsort(pop_dist, axis = -1)
+        c_pos = self.particles['current_position'].copy()
         for i in range(self.ps):
-            neighbors = rank_dist[i][:neighbor_num[action[i]]]
+            neighbors = rank_dist[i][:self.neighbor_num[action[i]]]
             # neighbors = np.append(neighbors, i)
             neighbors = neighbors[np.argsort(self.particles['c_cost'][neighbors])[::-1]]
             k = len(neighbors)
-            c_pos = self.particles['current_position'].copy()
+
             rand1 = self.rng.rand()
             rand2 = self.rng.rand()
             if self.rng.rand() <= self.TT2:
                 worse = neighbors[0]
             else:
-                worse = neighbors[self.rng.randint(0, 0.05*k)]
+                worse = neighbors[self.rng.randint(0, 0.05 * k + 1)]
 
             if self.rng.rand() <= self.TT2:
                 better = neighbors[-1]
             else:
-                better = neighbors[self.rng.randint(0.95*k, k)]
+                better = neighbors[self.rng.randint(0.95 * k - 1, k)]
             if self.rng.rand() < 0.5:
                 # update velocity
                 new_velocity[i] = self.w * self.particles['velocity'][i] + self.c1 * rand1 * (self.particles['pbest_position'][i] - self.particles['current_position'][i]) + \
-                            self.c2 * rand2 * (self.particles['current_position'][better] - self.particles['current_position'][i])
+                                  self.c2 * rand2 * (self.particles['current_position'][better] - self.particles['current_position'][i])
                 # clip the velocity if exceeding the boarder
                 new_velocity[i] = np.clip(new_velocity[i], -self.max_velocity, self.max_velocity)
                 # update position according the boarding method
                 raw_position = self.particles['current_position'][i] + new_velocity[i]
                 new_position[i] = np.clip(raw_position, problem.lb, problem.ub)
             else:
-                raw_position = c_pos[i] + self.rng.rand() * (c_pos[i] - c_pos[worse]) + self.rng.rand() * (c_pos[better] - c_pos[i]) 
+                raw_position = c_pos[i] + self.rng.rand() * (c_pos[i] - c_pos[worse]) + self.rng.rand() * (c_pos[better] - c_pos[i])
                 new_position[i] = np.clip(raw_position, problem.lb, problem.ub)
                 # update velocity
-                new_velocity[i] =  self.w * self.particles['velocity'][i] + self.c1 * rand1 * (self.particles['pbest_position'][i] - self.particles['current_position'][i]) + \
-                            self.c2 * rand2 * (self.particles['current_position'][better] - self.particles['current_position'][i])
+                new_velocity[i] = self.w * self.particles['velocity'][i] + self.c1 * rand1 * (self.particles['pbest_position'][i] - self.particles['current_position'][i]) + \
+                                  self.c2 * rand2 * (self.particles['current_position'][better] - self.particles['current_position'][i])
                 # clip the velocity if exceeding the boarder
                 new_velocity[i] = np.clip(new_velocity[i], -self.max_velocity, self.max_velocity)
                 # update position according the boarding method
-                
+
         # calculate the new costs
         new_cost = self.get_costs(new_position, problem)
 
@@ -221,7 +220,6 @@ class PSORLNS_Optimizer(Learnable_Optimizer):
             self.meta_Pr.append(raw_pr.copy())
             self.meta_Sr.append(raw_sr.copy())
 
-
         # see if the end condition is satisfied
         is_end = np.array([self.fes >= self.max_fes] * self.ps)
 
@@ -238,7 +236,6 @@ class PSORLNS_Optimizer(Learnable_Optimizer):
             self.pr.append(raw_pr.copy())
             self.sr.append(raw_sr.copy())
 
-            
         if is_end[0]:
             if len(self.cost) >= self.__config.n_logpoint + 1:
                 self.cost[-1] = self.particles['gbest_val']
@@ -250,8 +247,6 @@ class PSORLNS_Optimizer(Learnable_Optimizer):
                 raw_pr, raw_sr = self.cal_pr_sr(problem)
                 self.pr.append(raw_pr.copy())
                 self.sr.append(raw_sr.copy())
-            
-
 
         info = {}
         return next_state, reward, is_end, info
